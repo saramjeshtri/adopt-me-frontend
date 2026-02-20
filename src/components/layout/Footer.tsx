@@ -3,23 +3,24 @@ import { Heart, Shield, BookOpen, Users, Phone, Mail, MapPin } from 'lucide-reac
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300">
+    <footer style={{ backgroundColor: '#111827', width: '100%', display: 'block', margin: 0, padding: 0 }}>
+
       <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
 
-        {/* Left — Logo + description */}
+        {/* Left */}
         <div>
           <p className="text-2xl font-bold text-white">Më Adopto 🐾</p>
-          <p className="text-sm text-gray-400 mt-1">Bashkia e Tiranës</p>
+          <p className="text-sm text-gray-400 mt-1">Bashkia Tiranë</p>
           <p className="text-sm text-gray-400 mt-4 leading-relaxed">
             Platforma zyrtare e Bashkisë së Tiranës për mbrojtjen dhe
             adoptimin e kafshëve.
           </p>
         </div>
 
-        {/* Middle — Links */}
+        {/* Middle */}
         <div>
           <p className="text-white font-semibold mb-4">Lidhje të shpejta</p>
-          <div className="flex flex-col gap-2 text-sm">
+          <div className="flex flex-col gap-2 text-sm text-gray-400">
             <Link to="/"        className="flex items-center gap-2 hover:text-white transition-colors"><Heart size={14}    /> Kryesore</Link>
             <Link to="/adopto"  className="flex items-center gap-2 hover:text-white transition-colors"><Heart size={14}    /> Adopto</Link>
             <Link to="/raporto" className="flex items-center gap-2 hover:text-white transition-colors"><Shield size={14}   /> Raporto</Link>
@@ -28,10 +29,10 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Right — Contact */}
+        {/* Right */}
         <div>
           <p className="text-white font-semibold mb-4">Kontakt</p>
-          <div className="flex flex-col gap-3 text-sm">
+          <div className="flex flex-col gap-3 text-sm text-gray-400">
             <p className="flex items-center gap-2"><Phone size={14} /> +355 4 222 2222</p>
             <p className="flex items-center gap-2"><Mail size={14}  /> kafshë@tirana.al</p>
             <p className="flex items-center gap-2"><MapPin size={14}/> Sheshi "Skënderbej", Tiranë</p>
@@ -41,9 +42,12 @@ export default function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-gray-800 py-4 text-center text-xs text-gray-500">
-        © {new Date().getFullYear()} Bashkia e Tiranës. Të gjitha të drejtat e rezervuara.
+      <div style={{ borderTop: '1px solid #1f2937', backgroundColor: '#111827', width: '100%' }}>
+        <p className="text-center text-xs text-gray-500 py-4">
+          © {new Date().getFullYear()} Bashkia e Tiranës. Të gjitha të drejtat e rezervuara.
+        </p>
       </div>
+
     </footer>
   )
 }

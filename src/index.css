@@ -1,17 +1,38 @@
-/* This one line loads all of Tailwind's styles into our app */
 @import "tailwindcss";
 
-/* Our brand color — red from Bashkia Tiranës */
-:root {
-  --color-brand: #E30613;
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
-/* Smooth scrolling for the whole page */
-* {
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+html {
   scroll-behavior: smooth;
 }
 
-/* Default font for the whole site */
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.delay-100 { animation-delay: 0.1s; opacity: 0; }
+.delay-200 { animation-delay: 0.2s; opacity: 0; }
+.delay-300 { animation-delay: 0.3s; opacity: 0; }
