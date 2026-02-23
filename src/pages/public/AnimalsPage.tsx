@@ -94,18 +94,21 @@ export default function AnimalsPage() {
 
       {/* BOTTOM CTA */}
       <section className="py-12 md:py-16 text-center" style={{ backgroundColor: '#faf2ec' }}>
-        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 px-4">
-          Nuk e gjen atë që kërkon?
-        </h2>
-        <p className="text-gray-500 mb-6 text-sm md:text-base px-4">
-          Na kontaktoni dhe do të të ndihmojmë të gjesh kafshën perfekte
-        </p>
-        <Link
-          to="/kontakt"
-          className="inline-flex items-center gap-2 border-2 border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white px-6 md:px-8 py-3 rounded-full font-semibold transition-all text-sm"
-        >
-          Na kontaktoni
-        </Link>
+        <div className="max-w-xl mx-auto px-4 md:px-6">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
+            Dëshironi të dhuroni një kafshë? 🏠
+          </h2>
+          <p className="text-gray-500 text-sm md:text-base mb-8">
+            Nëse nuk mundeni të kujdeseni më për kafshën tuaj, ne jemi këtu
+            ta strehojmë me kujdes dhe t'i gjejmë një familje të re plot dashuri.
+          </p>
+          <Link
+            to="/kontakt"
+            className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-3.5 rounded-full font-semibold transition-all shadow-lg shadow-red-200 text-sm"
+          >
+            <Heart size={16} /> Na kontaktoni
+          </Link>
+        </div>
       </section>
 
     </div>

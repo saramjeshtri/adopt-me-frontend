@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Heart, Shield, BookOpen, Users, Home, Menu, X } from 'lucide-react'
 import bashkiaLogo from '../../assets/images/logoja.png'
@@ -14,18 +14,42 @@ const navItems = [
 export default function Navbar() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 1)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+      {/* Spacer so content doesn't hide under fixed navbar */}
+      <div style={{ height: '65px', backgroundColor: 'white' }} />
+
+      <header
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 9999,
+          backgroundColor: scrolled ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,1)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderBottom: '1px solid rgba(229,231,235,0.8)',
+          boxShadow: scrolled ? '0 2px 20px rgba(0,0,0,0.08)' : '0 1px 3px rgba(0,0,0,0.05)',
+          transition: 'all 0.3s ease',
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 md:gap-3">
-            <img src={bashkiaLogo} alt="Bashkia Tiranës" className="h-8 md:h-10 w-auto" />
+            <img src={bashkiaLogo} alt="Bashkia Tiranë" className="h-8 md:h-10 w-auto" />
             <div className="flex flex-col leading-tight">
               <span className="text-base md:text-xl font-bold text-red-600">Më Adopto 🐾</span>
-              <span className="text-xs text-gray-400">Bashkia Tiranë</span>
+              <span className="text-xs font-bold text-gray-700">Bashkia Tiranë</span>
             </div>
           </Link>
 
@@ -73,8 +97,10 @@ export default function Navbar() {
       )}
 
       {/* Mobile side drawer */}
-      <div className={`fixed top-0 right-0 h-full w-64 bg-white z-50 shadow-2xl transform transition-transform duration-300 md:hidden
-        ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+      <div
+        className={`fixed top-0 right-0 h-full w-64 bg-white shadow-2xl transform transition-transform duration-300 md:hidden
+          ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        style={{ zIndex: 99999 }}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-2">

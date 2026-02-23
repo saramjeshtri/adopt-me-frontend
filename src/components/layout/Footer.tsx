@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Heart, Shield, BookOpen, Users, Phone, Mail, MapPin } from 'lucide-react'
+import bashkiaLogo from '../../assets/images/logoja.png'
 
 export default function Footer() {
   return (
@@ -9,9 +10,14 @@ export default function Footer() {
 
         {/* Left */}
         <div>
-          <p className="text-2xl font-bold text-white">Më Adopto 🐾</p>
-          <p className="text-sm text-gray-400 mt-1">Bashkia Tiranë</p>
-          <p className="text-sm text-gray-400 mt-4 leading-relaxed">
+          <div className="flex items-center gap-3 mb-3">
+            <img src={bashkiaLogo} alt="Bashkia Tiranë" className="h-10 w-auto" />
+            <div>
+              <p className="text-xl font-bold text-white">Më Adopto 🐾</p>
+              <p className="text-xs text-gray-400">Bashkia Tiranë</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-400 mt-2 leading-relaxed">
             Platforma zyrtare e Bashkisë së Tiranës për mbrojtjen dhe
             adoptimin e kafshëve.
           </p>
