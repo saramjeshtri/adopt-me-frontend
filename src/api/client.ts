@@ -34,6 +34,14 @@ export const createReport = (data: object) =>
 export const getReport = (id: number) =>
   api.get(`/reports/${id}`).then(res => res.data)
 
+export const uploadReportMedia = (reportId: number, file: File) => {
+  const form = new FormData()
+  form.append('file', file)
+  return api.post(`/reports/${reportId}/media`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then(res => res.data)
+}
+
 //MEETINGS
 export const createMeeting = (data: object) =>
   api.post('/meetings/', data).then(res => res.data)
@@ -51,6 +59,9 @@ export const adminUpdateReport = (id: number, data: object) =>
 export const adminGetAnimals = (params?: object) =>
   api.get('/admin/animals', { params }).then(res => res.data)
 
+export const adminGetAnimal = (id: number) =>
+  api.get(`/admin/animals/${id}`).then(res => res.data)
+
 export const adminUpdateAnimal = (id: number, data: object) =>
   api.patch(`/admin/animals/${id}`, data).then(res => res.data)
 
@@ -67,5 +78,8 @@ export const adminUploadAnimalPhoto = (animalId: number, file: File) => {
     headers: { 'Content-Type': 'multipart/form-data' },
   }).then(res => res.data)
 }
+
+export const adminDeleteAnimalPhoto = (animalId: number, photoId: number) =>
+  api.delete(`/admin/animals/${animalId}/photos/${photoId}`).then(res => res.data)
 
 export default api

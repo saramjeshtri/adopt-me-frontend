@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
-import { Search, Eye, X, CheckCircle, AlertCircle, Upload } from 'lucide-react'
-import { adminGetAnimals, adminUpdateAnimal, adminUploadAnimalPhoto } from '../../api/client'
+import { Search, Eye, X, CheckCircle, AlertCircle, Upload, Trash2 } from 'lucide-react'
+import { adminGetAnimals, adminGetAnimal, adminUpdateAnimal, adminUploadAnimalPhoto, adminDeleteAnimalPhoto } from '../../api/client'
 import type { Animal } from '../../types'
 
 const SPECIES  = ['Qen', 'Mace', 'Zog', 'Kalë', 'Tjetër']
@@ -26,6 +26,8 @@ export default function AdminAnimalsPage() {
   const [updating, setUpdating] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null) // holds photoId to delete
+  const [deleting, setDeleting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const showToast = (type: 'success' | 'error', msg: string) => {
@@ -45,18 +47,23 @@ export default function AdminAnimalsPage() {
       .finally(() => setLoading(false))
   }
 
-  const openDetail = (a: Animal) => {
+  const openDetail = async (a: Animal) => {
     setSelected(a)
     setUpdateForm({
-      name:           a.name          ?? '',
-      species:        a.species       ?? '',
-      breed:          a.breed         ?? '',
-      age_estimate:   a.age_estimate  ?? '',
-      gender:         a.gender        ?? 'E panjohur',
-      description:    a.description   ?? '',
-      health_status:  a.health_status ?? 'Shëndetshëm',
+      name:            a.name           ?? '',
+      species:         a.species        ?? '',
+      breed:           a.breed          ?? '',
+      age_estimate:    a.age_estimate   ?? '',
+      gender:          a.gender         ?? 'E panjohur',
+      description:     a.description    ?? '',
+      health_status:   a.health_status  ?? 'Shëndetshëm',
       adoption_status: a.adoption_status ?? '',
     })
+    // Fetch full detail including photos
+    try {
+      const full = await adminGetAnimal(a.animal_id)
+      setSelected(full)
+    } catch {}
   }
 
   const handleUpdate = async () => {
@@ -85,16 +92,35 @@ export default function AdminAnimalsPage() {
     try {
       await adminUploadAnimalPhoto(selected.animal_id, file)
       showToast('success', 'Fotoja u ngarkua me sukses.')
-      // refresh selected animal photos
-      const updated = await adminGetAnimals({}).then((list: Animal[]) =>
-        list.find((a: Animal) => a.animal_id === selected.animal_id)
-      )
-      if (updated) setSelected(updated)
+      const updated = await adminGetAnimal(selected.animal_id)
+      setSelected(updated)
+      load()
     } catch {
       showToast('error', 'Ngarkimi i fotos dështoi.')
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  const handlePhotoDelete = (photoId: number) => {
+    setConfirmDelete(photoId)
+  }
+
+  const confirmPhotoDelete = async () => {
+    if (!selected || confirmDelete === null) return
+    setDeleting(true)
+    try {
+      await adminDeleteAnimalPhoto(selected.animal_id, confirmDelete)
+      showToast('success', 'Fotoja u fshi me sukses.')
+      const updated = await adminGetAnimal(selected.animal_id)
+      setSelected(updated)
+      load()
+    } catch {
+      showToast('error', 'Fshirja e fotos dështoi.')
+    } finally {
+      setDeleting(false)
+      setConfirmDelete(null)
     }
   }
 
@@ -165,7 +191,11 @@ export default function AdminAnimalsPage() {
                       {primaryPhoto
                         ? <img src={primaryPhoto.photo_url} alt="" className="w-10 h-10 rounded-xl object-cover" />
                         : <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-xl">
-                            {a.species === 'Qen' ? '🐕' : a.species === 'Mace' ? '🐈' : '🐾'}
+                            {a.species === 'Qen'   ? '🐕'
+                           : a.species === 'Mace'  ? '🐈'
+                           : a.species === 'Zog'   ? '🐦'
+                           : a.species === 'Kalë'  ? '🐴'
+                           : '🐾'}
                           </div>
                       }
                     </td>
@@ -212,10 +242,20 @@ export default function AdminAnimalsPage() {
                 {selected.photos && selected.photos.length > 0
                   ? selected.photos.map((p: any) => (
                       <div key={p.photo_id} className="relative">
-                        <img src={p.photo_url} alt="" className={`w-20 h-20 rounded-xl object-cover border-2 ${p.is_primary ? 'border-red-500' : 'border-transparent'}`} />
+                        <img src={p.photo_url} alt=""
+                          className={`w-20 h-20 rounded-xl object-cover border-2 ${p.is_primary ? 'border-red-500' : 'border-transparent'}`}
+                        />
                         {p.is_primary && (
                           <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">★</span>
                         )}
+                        {/* Always-visible delete button */}
+                        <button
+                          onClick={() => handlePhotoDelete(p.photo_id)}
+                          className="absolute bottom-1 right-1 w-6 h-6 bg-black/70 hover:bg-red-600 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                          title="Fshi foton"
+                        >
+                          <Trash2 size={11} className="text-white" />
+                        </button>
                       </div>
                     ))
                   : <p className="text-gray-500 text-sm">Nuk ka foto.</p>
@@ -278,6 +318,39 @@ export default function AdminAnimalsPage() {
                 {updating
                   ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Duke ruajtur...</>
                   : 'Ruaj ndryshimet'
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {confirmDelete !== null && (
+        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4">
+          <div className="w-full max-w-sm rounded-2xl border p-6" style={{ backgroundColor: '#1e293b', borderColor: '#334155' }}>
+            <div className="w-12 h-12 bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trash2 size={22} className="text-red-400" />
+            </div>
+            <h3 className="text-white font-bold text-lg text-center mb-2">Fshi foton?</h3>
+            <p className="text-gray-400 text-sm text-center mb-6">
+              Ky veprim është i pakthyeshëm. Fotoja do të fshihet përgjithmonë.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 border border-white/10 text-gray-400 hover:text-white py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer"
+              >
+                Anulo
+              </button>
+              <button
+                onClick={confirmPhotoDelete}
+                disabled={deleting}
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-900 text-white py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                {deleting
+                  ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Duke fshirë...</>
+                  : <><Trash2 size={14} /> Po, fshi</>
                 }
               </button>
             </div>

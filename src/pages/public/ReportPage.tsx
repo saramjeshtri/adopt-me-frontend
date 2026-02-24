@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { Shield, MapPin, Phone, Mail, Camera, ChevronRight, ChevronLeft, CheckCircle, AlertTriangle, Search } from 'lucide-react'
-import { createReport } from '../../api/client'
+import { useState, useRef } from 'react'
+import { Shield, MapPin, Phone, Mail, Camera, ChevronRight, ChevronLeft, CheckCircle, AlertTriangle, Search, X, Image, Video } from 'lucide-react'
+import { createReport, uploadReportMedia } from '../../api/client'
 
 const REPORT_TYPES = [
   { value: 'Abuzim me kafshë',   label: 'Abuzim me kafshë',   emoji: '🚨', desc: 'Keqtrajtim ose dhunë ndaj kafshës' },
@@ -40,6 +40,9 @@ export default function ReportPage() {
   const [submitted, setSubmitted] = useState(false)
   const [reportId, setReportId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [mediaFiles, setMediaFiles] = useState<File[]>([])
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const set = (key: keyof FormData, value: string | number) =>
     setForm(f => ({ ...f, [key]: value }))
@@ -55,6 +58,7 @@ export default function ReportPage() {
     setSubmitting(true)
     setError(null)
     try {
+      // Step 1: Create the report
       const res = await createReport({
         report_type:        form.report_type,
         report_description: form.report_description,
@@ -64,13 +68,29 @@ export default function ReportPage() {
         phoneNr:            form.phoneNr || undefined,
         email:              form.email   || undefined,
       })
-      setReportId(res.report_id)
+      const newReportId = res.report_id
+      setReportId(newReportId)
+
+      // Step 2: Upload media files one by one
+      if (mediaFiles.length > 0) {
+        for (let i = 0; i < mediaFiles.length; i++) {
+          setUploadProgress(`Duke ngarkuar skedarin ${i + 1} nga ${mediaFiles.length}...`)
+          try {
+            await uploadReportMedia(newReportId, mediaFiles[i])
+          } catch {
+            // Don't fail the whole submission if a file upload fails
+          }
+        }
+        setUploadProgress(null)
+      }
+
       setSubmitted(true)
     } catch (err: any) {
       const detail = err?.response?.data?.detail
       setError(typeof detail === 'string' ? detail : 'Diçka shkoi keq. Provoni përsëri.')
     } finally {
       setSubmitting(false)
+      setUploadProgress(null)
     }
   }
 
@@ -107,25 +127,25 @@ export default function ReportPage() {
         {/* Stepper — between hero and card */}
         {!submitted && (
           <div className="flex items-center justify-center mb-6">
-            <div className="flex items-center w-72">
+            <div className="flex items-center w-full max-w-sm">
               {STEPS.map((label, i) => (
                 <div key={i} className="flex items-center flex-1">
                   <div className="flex flex-col items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all
-                      ${i < step   ? 'bg-green-500 text-white'
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold transition-all
+                      ${i < step   ? 'bg-green-500 text-white shadow-md'
                       : i === step ? 'bg-red-600 text-white shadow-lg shadow-red-200'
                       : 'bg-gray-200 text-gray-400'}`}
                     >
                       {i < step ? '✓' : i + 1}
                     </div>
-                    <span className={`text-xs mt-1 font-medium whitespace-nowrap transition-colors
+                    <span className={`text-xs mt-1.5 font-semibold whitespace-nowrap transition-colors
                       ${i === step ? 'text-red-600' : i < step ? 'text-green-600' : 'text-gray-400'}`}
                     >
                       {label}
                     </span>
                   </div>
                   {i < STEPS.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-2 mb-4 transition-colors ${i < step ? 'bg-green-400' : 'bg-gray-200'}`} />
+                    <div className={`flex-1 h-1 mx-3 mb-5 rounded-full transition-colors ${i < step ? 'bg-green-400' : 'bg-gray-200'}`} />
                   )}
                 </div>
               ))}
@@ -166,6 +186,7 @@ export default function ReportPage() {
                 setSubmitted(false)
                 setReportId(null)
                 setStep(0)
+                setMediaFiles([])
                 setForm({
                   report_type: '', report_description: '', location_address: '',
                   latitude: 41.3275, longitude: 19.8187, phoneNr: '', email: '', photoUrl: '',
@@ -250,11 +271,79 @@ export default function ReportPage() {
 
                     <LocationButton form={form} setForm={setForm} />
 
-                    <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex gap-2 text-xs text-blue-600">
-                      <Camera size={14} className="shrink-0 mt-0.5" />
-                      <span>
-                        Foto mund të bashkëngjiten pas dërgimit të raportit nëpërmjet ID-së tuaj të raportit.
-                      </span>
+                    {/* Media Upload */}
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">
+                        <Camera size={12} className="inline mr-1" /> Foto / Video
+                        <span className="ml-1 text-gray-300 font-normal normal-case">(opsionale)</span>
+                      </label>
+
+                      {/* Drop zone */}
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full border-2 border-dashed border-gray-200 rounded-xl px-4 py-5 text-center cursor-pointer hover:border-red-300 hover:bg-orange-50/50 transition-all"
+                      >
+                        <Camera size={22} className="mx-auto text-gray-300 mb-2" />
+                        <p className="text-sm text-gray-400">Klikoni për të ngarkuar foto ose video</p>
+                        <p className="text-xs text-gray-300 mt-1">JPEG, PNG, WebP, MP4, MOV · maks 10MB</p>
+                      </div>
+
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
+                        className="hidden"
+                        onChange={e => {
+                          const files = Array.from(e.target.files || [])
+                          setMediaFiles(prev => {
+                            const existing = new Set(prev.map(f => f.name + f.size))
+                            const newFiles = files.filter(f => !existing.has(f.name + f.size))
+                            return [...prev, ...newFiles].slice(0, 5) // max 5 files
+                          })
+                          e.target.value = ''
+                        }}
+                      />
+
+                      {/* Preview selected files */}
+                      {mediaFiles.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {mediaFiles.map((file, i) => {
+                            const isVideo = file.type.startsWith('video/')
+                            const sizeMB = (file.size / 1024 / 1024).toFixed(1)
+                            return (
+                              <div key={i} className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
+                                <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
+                                  {isVideo
+                                    ? <Video size={14} className="text-red-400" />
+                                    : <Image size={14} className="text-red-400" />
+                                  }
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium text-gray-700 truncate">{file.name}</p>
+                                  <p className="text-xs text-gray-400">{sizeMB} MB</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setMediaFiles(prev => prev.filter((_, j) => j !== i))}
+                                  className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer shrink-0"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            )
+                          })}
+                          {mediaFiles.length < 5 && (
+                            <button
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="text-xs text-red-500 hover:text-red-600 cursor-pointer transition-colors"
+                            >
+                              + Shto skedar tjetër ({mediaFiles.length}/5)
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -360,8 +449,8 @@ export default function ReportPage() {
                     className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white px-8 py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer disabled:cursor-not-allowed"
                   >
                     {submitting
-                      ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Duke dërguar...</>
-                      : <><Shield size={15} /> Dërgo raportin</>
+                      ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> {uploadProgress || 'Duke dërguar...'}</>
+                      : <><Shield size={15} /> Dërgo raportin{mediaFiles.length > 0 ? ` + ${mediaFiles.length} skedar` : ''}</>
                     }
                   </button>
                 )}

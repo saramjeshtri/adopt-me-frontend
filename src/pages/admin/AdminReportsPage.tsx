@@ -30,6 +30,7 @@ export default function AdminReportsPage() {
     animal_health_status: 'Shëndetshëm',
     animal_breed: '',
     animal_age_estimate: '',
+    animal_count: 1,
   })
   const [updating, setUpdating] = useState(false)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
@@ -63,6 +64,7 @@ export default function AdminReportsPage() {
       animal_health_status: 'Shëndetshëm',
       animal_breed: '',
       animal_age_estimate: '',
+      animal_count: 1,
     })
   }
 
@@ -78,6 +80,7 @@ export default function AdminReportsPage() {
         payload.animal_health_status = updateForm.animal_health_status
         payload.animal_breed         = updateForm.animal_breed
         payload.animal_age_estimate  = updateForm.animal_age_estimate
+        payload.animal_count         = updateForm.animal_count
       }
       await adminUpdateReport(selected.report_id, payload)
       showToast('success', 'Raporti u përditësua me sukses.')
@@ -97,7 +100,7 @@ export default function AdminReportsPage() {
     String(r.report_id).includes(search)
   )
 
-  const setForm = (key: string, val: string) => setUpdateForm(f => ({ ...f, [key]: val }))
+  const setForm = (key: string, val: string | number) => setUpdateForm(f => ({ ...f, [key]: val }))
 
   return (
     <div>
@@ -228,9 +231,23 @@ export default function AdminReportsPage() {
               {updateForm.report_status === 'Zgjidhur - Kafshë e gjetur' && (
                 <div className="bg-white/5 rounded-xl p-4 space-y-3 border border-white/10">
                   <p className="text-xs font-semibold text-yellow-400 mb-1">⚠️ Detajet e kafshës (të detyrueshme)</p>
-                  <input placeholder="Emri i kafshës *" value={updateForm.animal_name}
-                    onChange={e => setForm('animal_name', e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500" />
+
+                  {/* Animal count */}
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1.5 block">Sa kafshë u gjetën? *</label>
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => setForm('animal_count', Math.max(1, updateForm.animal_count - 1))}
+                        className="w-9 h-9 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center text-lg">−</button>
+                      <span className="text-white font-bold text-lg w-8 text-center">{updateForm.animal_count}</span>
+                      <button type="button" onClick={() => setForm('animal_count', Math.min(10, updateForm.animal_count + 1))}
+                        className="w-9 h-9 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center text-lg">+</button>
+                      {updateForm.animal_count > 1 && (
+                        <p className="text-xs text-gray-400">
+                          Do të krijohen <span className="text-yellow-400 font-semibold">{updateForm.animal_count} kafshë</span> si "E panjohur 1, 2, 3..."
+                        </p>
+                      )}
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <select value={updateForm.animal_species} onChange={e => setForm('animal_species', e.target.value)}
                       className="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 cursor-pointer">
