@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { FileText, PawPrint, Calendar, Menu, Shield, LogOut, ChevronRight, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { FileText, PawPrint, Calendar, Menu, Shield, LogOut, ChevronRight, Eye, EyeOff, AlertCircle, Users, Heart } from 'lucide-react'
 
 const navItems = [
-  { label: 'Raportet', path: '/admin/reports',  icon: FileText },
-  { label: 'Kafshët',  path: '/admin/animals',  icon: PawPrint },
-  { label: 'Takimet',  path: '/admin/meetings', icon: Calendar },
+  { label: 'Raportet', path: '/admin/reports',   icon: FileText },
+  { label: 'Kafshët',  path: '/admin/animals',   icon: PawPrint },
+  { label: 'Takimet',  path: '/admin/meetings',  icon: Calendar },
+  { label: 'Evente',   path: '/admin/events',    icon: Users    },
+  { label: 'Dhurimi',  path: '/admin/surrender', icon: Heart    },
 ]
 
 const SESSION_KEY = 'meadopto_admin_key'
