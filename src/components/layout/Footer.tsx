@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Heart, Shield, BookOpen, Users, Phone, Mail, MapPin } from 'lucide-react'
+import { Home, Heart, Shield, BookOpen, Phone, Mail, MapPin } from 'lucide-react'
 import bashkiaLogo from '../../assets/images/logoja.png'
 
 export default function Footer() {
@@ -27,11 +27,11 @@ export default function Footer() {
         <div>
           <p className="text-white font-semibold mb-4">Lidhje të shpejta</p>
           <div className="flex flex-col gap-2 text-sm text-gray-400">
-            <Link to="/"        className="flex items-center gap-2 hover:text-white transition-colors"><Heart size={14}    /> Kryesore</Link>
+            <Link to="/"        className="flex items-center gap-2 hover:text-white transition-colors"><Home size={14}     /> Kryesore</Link>
             <Link to="/adopto"  className="flex items-center gap-2 hover:text-white transition-colors"><Heart size={14}    /> Adopto</Link>
             <Link to="/raporto" className="flex items-center gap-2 hover:text-white transition-colors"><Shield size={14}   /> Raporto</Link>
             <Link to="/edukim"  className="flex items-center gap-2 hover:text-white transition-colors"><BookOpen size={14} /> Edukim</Link>
-            <Link to="/kontakt" className="flex items-center gap-2 hover:text-white transition-colors"><Users size={14}    /> Kontakt</Link>
+            <Link to="/kontakt" className="flex items-center gap-2 hover:text-white transition-colors"><Phone size={14}    /> Kontakt</Link>
           </div>
         </div>
 
@@ -39,9 +39,9 @@ export default function Footer() {
         <div>
           <p className="text-white font-semibold mb-4">Kontakt</p>
           <div className="flex flex-col gap-3 text-sm text-gray-400">
-            <p className="flex items-center gap-2"><Phone size={14} /> +355 4 222 2222</p>
-            <p className="flex items-center gap-2"><Mail size={14}  /> kafshë@tirana.al</p>
-            <p className="flex items-center gap-2"><MapPin size={14}/> Sheshi "Skënderbej", Tiranë</p>
+            <p className="flex items-center gap-2"><Phone size={14} /> 0800 0888</p>
+            <p className="flex items-center gap-2"><Mail size={14}  /> info@tirana.al</p>
+            <p className="flex items-center gap-2"><MapPin size={14}/> Sheshi "Skënderbej", Godina nr. 2, Tiranë</p>
           </div>
         </div>
 
