@@ -228,20 +228,27 @@ export default function TrackReportPage() {
               <div className="mt-4">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Foto / Video</p>
                 <div className="flex gap-3 flex-wrap">
-                  {report.media.map(m => (
-                    <a
-                      key={m.media_id}
-                      href={m.file_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="w-20 h-20 rounded-xl overflow-hidden border border-gray-100 hover:opacity-80 transition-opacity block"
-                    >
-                      {m.media_type === 'foto'
-                        ? <img src={m.file_url} alt="media" className="w-full h-full object-cover" />
-                        : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-2xl">🎥</div>
-                      }
-                    </a>
-                  ))}
+                  {report.media.map(m => {
+                    const isVideo = /\.(mp4|mov|avi|webm|mkv)$/i.test(m.file_url) || m.media_type?.toLowerCase() === 'video'
+                    return isVideo ? (
+                      <video
+                        key={m.media_id}
+                        src={m.file_url}
+                        controls
+                        className="rounded-xl border border-gray-100 max-h-48 max-w-full"
+                      />
+                    ) : (
+                      <a
+                        key={m.media_id}
+                        href={m.file_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-20 h-20 rounded-xl overflow-hidden border border-gray-100 hover:opacity-80 transition-opacity block"
+                      >
+                        <img src={m.file_url} alt="media" className="w-full h-full object-cover" />
+                      </a>
+                    )
+                  })}
                 </div>
               </div>
             )}
