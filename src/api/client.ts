@@ -82,4 +82,46 @@ export const adminUploadAnimalPhoto = (animalId: number, file: File) => {
 export const adminDeleteAnimalPhoto = (animalId: number, photoId: number) =>
   api.delete(`/admin/animals/${animalId}/photos/${photoId}`).then(res => res.data)
 
+// EVENTS (public)
+export const getEvents = () =>
+  api.get('/events/').then(res => res.data)
+
+// EVENTS (admin)
+export const adminGetEvents = () =>
+  api.get('/admin/events/').then(res => res.data)
+
+export const adminCreateEvent = (data: object) =>
+  api.post('/admin/events/', data).then(res => res.data)
+
+export const adminUpdateEvent = (id: number, data: object) =>
+  api.patch(`/admin/events/${id}`, data).then(res => res.data)
+
+export const adminDeleteEvent = (id: number) =>
+  api.delete(`/admin/events/${id}`).then(res => res.data)
+
+// SURRENDER (public)
+export const createSurrender = (data: object) =>
+  api.post('/surrender/', data).then(res => res.data)
+
+export const uploadSurrenderMedia = (surrenderId: number, file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return api.post(`/surrender/${surrenderId}/media`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then(res => res.data)
+}
+
+// SURRENDER (admin)
+export const adminGetSurrenders = (status?: string) =>
+  api.get('/admin/surrender/', { params: status ? { status } : {} }).then(res => res.data)
+
+export const adminUpdateSurrenderStatus = (id: number, status: string) =>
+  api.patch(`/admin/surrender/${id}/status`, { status }).then(res => res.data)
+
+export const adminAcceptSurrender = (id: number, data: object) =>
+  api.post(`/admin/surrender/${id}/accept`, data).then(res => res.data)
+
+export const adminDeleteSurrender = (id: number) =>
+  api.delete(`/admin/surrender/${id}`).then(res => res.data)
+
 export default api
