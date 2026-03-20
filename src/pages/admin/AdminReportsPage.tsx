@@ -10,9 +10,11 @@ const HEALTH   = ['Shëndetshëm', 'I lënduar', 'Në trajtim']
 
 function statusBadge(status: string) {
   const base = 'text-xs font-semibold px-2.5 py-1 rounded-full'
-  if (status === 'Hapur')     return `${base} bg-red-900/40 text-red-400`
-  if (status === 'Në proces') return `${base} bg-yellow-900/40 text-yellow-400`
-  if (status.startsWith('Zgjidhur')) return `${base} bg-green-900/40 text-green-400`
+  if (status === 'Hapur')                        return `${base} bg-red-900/40 text-red-400`
+  if (status === 'Në proces')                    return `${base} bg-yellow-900/40 text-yellow-400`
+  if (status === 'Zgjidhur - Kafshë e gjetur')   return `${base} bg-green-900/40 text-green-400`
+  if (status === 'Zgjidhur - Nuk u gjet')        return `${base} bg-orange-900/40 text-orange-400`
+  if (status === 'Zgjidhur - Kthyer pronarit')   return `${base} bg-teal-900/40 text-teal-400`
   return `${base} bg-gray-700 text-gray-400`
 }
 
@@ -94,11 +96,17 @@ export default function AdminReportsPage() {
     }
   }
 
-  const filtered = reports.filter(r =>
-    !search || r.location_address.toLowerCase().includes(search.toLowerCase()) ||
-    r.report_type.toLowerCase().includes(search.toLowerCase()) ||
-    String(r.report_id).includes(search)
-  )
+  const filtered = reports.filter(r => {
+    if (!search) return true
+    const q = search.toLowerCase().trim()
+    if (/^\d+$/.test(q)) return String(r.report_id) === q
+    return (
+      r.location_address.toLowerCase().includes(q) ||
+      r.report_type.toLowerCase().includes(q) ||
+      (r.report_description ?? '').toLowerCase().includes(q) ||
+      r.report_status.toLowerCase().includes(q)
+    )
+  })
 
   const setForm = (key: string, val: string | number) => setUpdateForm(f => ({ ...f, [key]: val }))
 
@@ -234,7 +242,7 @@ export default function AdminReportsPage() {
 
                   {/* Animal count */}
                   <div>
-                    <label className="text-xs text-gray-400 mb-1.5 block">Sa kafshë u gjetën? *</label>
+                    <label className="text-xs text-gray-400 mb-1.5 block">Sa kafshë u gjetën?</label>
                     <div className="flex items-center gap-3">
                       <button type="button" onClick={() => setForm('animal_count', Math.max(1, updateForm.animal_count - 1))}
                         className="w-9 h-9 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center text-lg">−</button>
@@ -251,7 +259,7 @@ export default function AdminReportsPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <select value={updateForm.animal_species} onChange={e => setForm('animal_species', e.target.value)}
                       className="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 cursor-pointer">
-                      <option value="" className="bg-gray-900">Lloji *</option>
+                      <option value="" className="bg-gray-900">Lloji</option>
                       {SPECIES.map(s => <option key={s} value={s} className="bg-gray-900">{s}</option>)}
                     </select>
                     <select value={updateForm.animal_gender} onChange={e => setForm('animal_gender', e.target.value)}

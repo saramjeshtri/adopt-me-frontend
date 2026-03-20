@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Edit2, Trash2, MapPin, Clock, Users, X, CheckCircle, AlertCircle } from 'lucide-react'
+import { Plus, Edit2, Trash2, MapPin, Clock, Users, X, CheckCircle, AlertCircle , CalendarX} from 'lucide-react'
 import { adminGetEvents, adminCreateEvent, adminUpdateEvent, adminDeleteEvent } from '../../api/client'
 
 interface Event {
@@ -146,7 +146,7 @@ export default function AdminEventsPage() {
         <div className="text-center py-16 text-gray-500 text-sm">Duke ngarkuar eventet...</div>
       ) : events.length === 0 ? (
         <div className="text-center py-16">
-          <div className="text-5xl mb-4">📅</div>
+          <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4"><CalendarX size={26} className="text-gray-500" /></div>
           <p className="text-gray-400 font-medium">Nuk ka evente ende.</p>
           <button onClick={openCreate} className="mt-4 text-red-400 text-sm hover:text-red-300 cursor-pointer transition-colors">
             + Shto eventin e parë

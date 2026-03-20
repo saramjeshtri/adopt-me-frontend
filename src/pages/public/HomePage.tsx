@@ -1,211 +1,193 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Heart, Shield, BookOpen, Users } from 'lucide-react'
+import { Shield, BookOpen, Phone, PawPrint, AlertTriangle, GraduationCap, HandHeart, ArrowRight, Heart, Sparkles } from 'lucide-react'
 import { getAnimalStats } from '../../api/client'
 import type { AdoptionStats } from '../../types'
 import heroBg from '../../assets/images/selected.jpeg'
 
+function useInView() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const o = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true) }, { threshold: 0.06 })
+    if (ref.current) o.observe(ref.current)
+    return () => o.disconnect()
+  }, [])
+  return { ref, visible }
+}
+
+function FadeUp({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const { ref, visible } = useInView()
+  return (
+    <div ref={ref} className={className} style={{
+      opacity: visible ? 1 : 0,
+      transform: visible ? 'translateY(0)' : 'translateY(26px)',
+      transition: `opacity 0.65s ease ${delay}ms, transform 0.65s ease ${delay}ms`,
+    }}>{children}</div>
+  )
+}
+
 export default function HomePage() {
   const [stats, setStats] = useState<AdoptionStats | null>(null)
-
-  useEffect(() => {
-    getAnimalStats()
-      .then(setStats)
-      .catch(() => {})
-  }, [])
+  useEffect(() => { getAnimalStats().then(setStats).catch(() => {}) }, [])
 
   return (
-    <div style={{ backgroundColor: '#fdf6f0' }}>
+    <div style={{ backgroundColor: '#f5f0eb' }}>
 
       {/* HERO */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url(${heroBg})`, filter: 'brightness(0.45)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.2) 50%, rgba(245,240,235,1) 100%)' }} />
 
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroBg})` }}
-        />
-        <div className="absolute inset-0 bg-gray-900/35" />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 via-transparent to-gray-900/15" />
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-900/25 via-transparent to-gray-900/25" />
-
-        <div className="relative z-10 text-center px-4 md:px-6 max-w-3xl mx-auto w-full">
-
-          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-3 md:mb-4 leading-tight">
-            Më Adopto{' '}
-            <span className="inline-block drop-shadow-[0_0_12px_rgba(255,255,255,0.8)]">
-              🐾
-            </span>
-          </h1>
-
-          <h2 className="text-base sm:text-lg md:text-2xl text-red-300 font-medium mb-4 md:mb-6">
-            Gjej shokun tënd të ri
-          </h2>
-
-          <p className="text-gray-200 mb-6 md:mb-10 leading-relaxed text-sm sm:text-base md:text-lg max-w-xl mx-auto">
-            Platforma zyrtare e Bashkisë së Tiranës për mbrojtjen dhe
-            adoptimin e kafshëve. Jep një jetë më të mirë kafshëve
-            që kanë nevojë për dashuri.
-          </p>
-
-          <div className="flex gap-3 md:gap-4 flex-wrap justify-center">
-            <Link
-              to="/adopto"
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 md:px-10 py-3 md:py-4 rounded-full font-semibold transition-all shadow-xl shadow-red-900/40 text-sm"
-            >
-              <Heart size={16} /> Adopto një kafshë
-            </Link>
-            <Link
-              to="/raporto"
-              className="flex items-center gap-2 border-2 border-white/70 text-white hover:bg-white hover:text-gray-900 px-6 md:px-10 py-3 md:py-4 rounded-full font-semibold transition-all text-sm backdrop-blur-sm"
-            >
-              <Shield size={16} /> Raporto keqtrajtim
-            </Link>
-          </div>
-
+        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto w-full pt-24 pb-32">
+          <FadeUp delay={100}>
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white leading-[1.0] tracking-tight mb-6" style={{ textShadow: '0 2px 30px rgba(0,0,0,0.3)' }}>
+              Një adoptim,<br />
+              <span style={{ color: '#fda4af' }}>një jetë e shpëtuar.</span>
+            </h1>
+          </FadeUp>
+          <FadeUp delay={200}>
+            <p className="text-base md:text-lg max-w-lg mx-auto mb-10 leading-relaxed" style={{ color: 'rgba(255,255,255,0.8)' }}>
+              Platforma zyrtare e Bashkisë së Tiranës për mbrojtjen dhe adoptimin e kafshëve.
+            </p>
+          </FadeUp>
+          <FadeUp delay={300}>
+            <div className="flex gap-3 flex-wrap justify-center">
+              <Link to="/adopto"
+                className="group flex items-center gap-2 text-white px-8 py-4 rounded-2xl font-bold text-sm transition-all hover:scale-[1.03]"
+                style={{ backgroundColor: '#e02424', boxShadow: '0 8px 30px rgba(224,36,36,0.5)' }}>
+                <Heart size={16} fill="white" /> Adopto tani
+                <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link to="/raporto"
+                className="flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-sm transition-all hover:bg-white/20"
+                style={{ backgroundColor: 'rgba(255,255,255,0.12)', color: '#ffffff', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.25)' }}>
+                <Shield size={16} /> Raporto keqtrajtim
+              </Link>
+            </div>
+          </FadeUp>
         </div>
       </section>
 
       {/* STATS */}
-      <section className="py-12 md:py-16" style={{ backgroundColor: '#fdf6f0' }}>
-        <div className="max-w-4xl mx-auto px-4 md:px-6 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 md:mb-12">Ndikimi Ynë</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-            <Stat number={stats?.total_rescued}        label="Kafshë të shpëtuara"    color="text-red-600"  />
-            <Stat number={stats?.currently_available}  label="Disponueshme tani"      color="text-blue-700" />
-            <Stat number={stats?.meetings_scheduled}   label="Takime të planifikuara" color="text-red-600"  />
-            <Stat number={stats?.successfully_adopted} label="Kafshë të adoptuara"    color="text-blue-700" />
+      <FadeUp>
+        <div className="max-w-4xl mx-auto px-6 -mt-10 relative z-10 pb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { value: stats?.total_rescued,        label: 'Kafshë të shpëtuara',    color: '#e02424', bg: '#fef2f2' },
+              { value: stats?.currently_available,  label: 'Disponueshme tani',      color: '#059669', bg: '#f0fdf4' },
+              { value: stats?.meetings_scheduled,   label: 'Takime të planifikuara', color: '#2563eb', bg: '#eff6ff' },
+              { value: stats?.successfully_adopted, label: 'Kafshë të adoptuara',    color: '#7c3aed', bg: '#f5f3ff' },
+            ].map(({ value, label, color, bg }) => (
+              <div key={label} className="rounded-2xl p-5 text-center" style={{ backgroundColor: bg, border: '1px solid rgba(0,0,0,0.05)' }}>
+                <p className="text-4xl md:text-5xl font-black mb-1" style={{ color }}>
+                  {value !== undefined && value !== null ? value : '—'}
+                </p>
+                <p className="text-xs font-medium mt-1" style={{ color: '#6b7280' }}>{label}</p>
+              </div>
+            ))}
           </div>
         </div>
-      </section>
+      </FadeUp>
 
       {/* MISSION */}
-      <section className="py-12 md:py-16" style={{ backgroundColor: '#faf2ec' }}>
-        <div className="max-w-5xl mx-auto px-4 md:px-6 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">Misioni Ynë</h2>
-          <p className="text-gray-500 max-w-2xl mx-auto mb-8 md:mb-12 text-sm md:text-base">
-            Të krijojmë një komunitet ku çdo kafshë ka mundësinë për një jetë
-            të lumtur dhe të sigurt.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            <MissionCard
-              icon={<Heart size={24} className="text-red-600" />}
-              title="Adoptime të Përgjegjshme"
-              text="Ndihmojmë në gjetjen e familjeve të përshtatshme për kafshët që kanë nevojë për një shtëpi."
-              delay="0ms"
-            />
-            <MissionCard
-              icon={<Shield size={24} className="text-blue-700" />}
-              title="Mbrojtje dhe Siguri"
-              text="Luftojmë keqtrajtimin dhe sigurojmë që çdo kafshë të trajtohet me dinjitet dhe respekt."
-              delay="150ms"
-            />
-            <MissionCard
-              icon={<BookOpen size={24} className="text-red-600" />}
-              title="Edukim dhe Ndërgjegjësim"
-              text="Ofrojmë informacion dhe këshilla për kujdesin e duhur ndaj kafshëve."
-              delay="300ms"
-            />
+      <section className="py-24 px-6 mt-8" style={{ backgroundColor: '#ffffff' }}>
+        <div className="max-w-6xl mx-auto">
+          <FadeUp>
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-5" style={{ backgroundColor: '#fef2f2', color: '#e02424' }}>
+                <Sparkles size={11} /> Misioni Ynë
+              </div>
+              <h2 className="text-3xl md:text-5xl font-black leading-tight" style={{ color: '#111827' }}>
+                Çdo kafshë meriton<br />
+                <span style={{ color: '#9ca3af' }}>një jetë të lumtur.</span>
+              </h2>
+            </div>
+          </FadeUp>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              { icon: <HandHeart size={22} />, title: 'Adoptime të Përgjegjshme', text: 'Ndihmojmë në gjetjen e familjeve të përshtatshme për kafshët që kanë nevojë për një shtëpi.', iconBg: '#fef2f2', iconColor: '#e02424', borderTop: '#e02424', delay: 0 },
+              { icon: <Shield size={22} />,    title: 'Mbrojtje dhe Siguri',      text: 'Luftojmë keqtrajtimin dhe sigurojmë që çdo kafshë të trajtohet me dinjitet dhe respekt.',       iconBg: '#eff6ff', iconColor: '#2563eb', borderTop: '#2563eb', delay: 100 },
+              { icon: <GraduationCap size={22} />, title: 'Edukim dhe Ndërgjegjësim', text: 'Ofrojmë informacion dhe këshilla për kujdesin e duhur ndaj kafshëve.',                    iconBg: '#f5f3ff', iconColor: '#7c3aed', borderTop: '#7c3aed', delay: 200 },
+            ].map(({ icon, title, text, iconBg, iconColor, borderTop, delay }) => (
+              <FadeUp key={title} delay={delay}>
+                <div className="rounded-2xl p-8 h-full hover:-translate-y-1 transition-all duration-300 hover:shadow-xl" style={{ border: '1px solid #f3f4f6', borderTop: `3px solid ${borderTop}`, backgroundColor: '#fafafa' }}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ backgroundColor: iconBg, color: iconColor }}>{icon}</div>
+                  <h3 className="font-bold text-base mb-3" style={{ color: '#111827' }}>{title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: '#6b7280' }}>{text}</p>
+                </div>
+              </FadeUp>
+            ))}
           </div>
         </div>
       </section>
 
       {/* HOW TO HELP */}
-      <section className="py-12 md:py-16" style={{ backgroundColor: '#fdf6f0' }}>
-        <div className="max-w-5xl mx-auto px-4 md:px-6 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">Si Mund të Ndihmosh?</h2>
-          <p className="text-gray-500 mb-8 md:mb-12 text-sm md:text-base">
-            Ka shumë mënyra për të kontribuar në mbrojtjen e kafshëve në Tiranë
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            <HelpCard
-              icon={<Heart size={20} className="text-red-600" />}
-              title="Adopto"
-              text="Gjej shokun tënd të ri"
-              to="/adopto"
-            />
-            <HelpCard
-              icon={<Shield size={20} className="text-blue-700" />}
-              title="Raporto"
-              text="Njofto keqtrajtimin"
-              to="/raporto"
-            />
-            <HelpCard
-              icon={<BookOpen size={20} className="text-red-600" />}
-              title="Mëso"
-              text="Materiale edukative"
-              to="/edukim"
-            />
-            <HelpCard
-              icon={<Users size={20} className="text-blue-700" />}
-              title="Kontakt"
-              text="Na kontaktoni"
-              to="/kontakt"
-            />
+      <section className="py-24 px-6" style={{ backgroundColor: '#f5f0eb' }}>
+        <div className="max-w-6xl mx-auto">
+          <FadeUp>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+              <div>
+                <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-5" style={{ backgroundColor: '#fef2f2', color: '#e02424' }}>
+                  Si të Ndihmosh
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black" style={{ color: '#111827' }}>Si mund të kontribuosh?</h2>
+              </div>
+              <p className="text-sm max-w-xs leading-relaxed" style={{ color: '#9ca3af' }}>
+                Ka shumë mënyra për të kontribuar në mbrojtjen e kafshëve në Tiranë.
+              </p>
+            </div>
+          </FadeUp>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { icon: <PawPrint size={22} />,      title: 'Adopto',  desc: 'Gjej shokun tënd të ri', to: '/adopto',  color: '#e02424', bg: '#fef2f2', delay: 0 },
+              { icon: <AlertTriangle size={22} />, title: 'Raporto', desc: 'Njofto keqtrajtimin',    to: '/raporto', color: '#ea580c', bg: '#fff7ed', delay: 80 },
+              { icon: <BookOpen size={22} />,      title: 'Mëso',    desc: 'Materiale edukative',    to: '/edukim',  color: '#2563eb', bg: '#eff6ff', delay: 160 },
+              { icon: <Phone size={22} />,         title: 'Kontakt', desc: 'Na kontaktoni direkt',   to: '/kontakt', color: '#059669', bg: '#f0fdf4', delay: 240 },
+            ].map(({ icon, title, desc, to, color, bg, delay }) => (
+              <FadeUp key={title} delay={delay}>
+                <Link to={to} className="group flex flex-col gap-5 p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg h-full"
+                  style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.06)' }}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: bg, color }}>{icon}</div>
+                  <div className="flex-1">
+                    <p className="font-bold text-base" style={{ color: '#111827' }}>{title}</p>
+                    <p className="text-xs mt-1" style={{ color: '#9ca3af' }}>{desc}</p>
+                  </div>
+                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-1 duration-300" style={{ color: '#d1d5db' }} />
+                </Link>
+              </FadeUp>
+            ))}
           </div>
         </div>
       </section>
 
-    </div>
-  )
-}
+      {/* CTA BANNER — dark warm instead of clashing red */}
+      <FadeUp>
+        <section className="mx-4 md:mx-8 mb-16">
+          <div className="rounded-3xl overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #1c1917 0%, #292524 100%)' }}>
+            <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+            <div className="absolute top-0 right-0 w-72 h-72 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #fda4af 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
+            <div className="relative px-8 py-16 flex flex-col md:flex-row items-center justify-between gap-8 max-w-5xl mx-auto">
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Heart size={14} fill="#fda4af" style={{ color: '#fda4af' }} />
+                  <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.45)' }}>Vepro tani</span>
+                </div>
+                <h2 className="text-2xl md:text-4xl font-black text-white leading-tight">
+                  Ka një kafshë që është duke<br />pritur për dashurinë tënde.
+                </h2>
+              </div>
+              <Link to="/adopto"
+                className="group flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-sm transition-all hover:scale-[1.02] whitespace-nowrap"
+                style={{ backgroundColor: '#e02424', color: '#ffffff', boxShadow: '0 4px 20px rgba(224,36,36,0.4)' }}>
+                Shiko kafshët
+                <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      </FadeUp>
 
-function Stat({ number, label, color }: {
-  number?: number
-  label: string
-  color: string
-}) {
-  return (
-    <div>
-      <p className={`text-3xl md:text-5xl font-bold ${color}`}>
-        {number !== undefined && number !== null ? number : '—'}
-      </p>
-      <p className="text-gray-500 text-xs md:text-sm mt-2">{label}</p>
     </div>
-  )
-}
-
-function MissionCard({ icon, title, text, delay }: {
-  icon: React.ReactNode
-  title: string
-  text: string
-  delay: string
-}) {
-  return (
-    <div
-      className="bg-white/80 rounded-2xl p-6 md:p-8 shadow-sm border border-orange-50 text-center h-full cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-2 hover:bg-white hover:border-red-100 group"
-      style={{ animationDelay: delay }}
-    >
-      <div className="flex justify-center mb-3 md:mb-4">
-        <div className="bg-orange-50/50 p-3 md:p-4 rounded-full transition-all duration-300 group-hover:bg-red-50 group-hover:scale-110">
-          {icon}
-        </div>
-      </div>
-      <h3 className="font-bold text-gray-900 mb-2 text-sm md:text-base group-hover:text-red-600 transition-colors duration-300">
-        {title}
-      </h3>
-      <p className="text-gray-500 text-xs md:text-sm leading-relaxed">{text}</p>
-    </div>
-  )
-}
-
-function HelpCard({ icon, title, text, to }: {
-  icon: React.ReactNode
-  title: string
-  text: string
-  to: string
-}) {
-  return (
-    <Link
-      to={to}
-      className="bg-white/60 hover:bg-white hover:shadow-md rounded-2xl p-4 md:p-6 text-center transition-all duration-300 border border-orange-50 hover:border-orange-100 hover:-translate-y-1 block cursor-pointer group"
-    >
-      <div className="flex justify-center mb-2 md:mb-3">
-        <div className="bg-white p-2 md:p-3 rounded-full shadow-sm group-hover:scale-110 transition-transform duration-300">
-          {icon}
-        </div>
-      </div>
-      <h3 className="font-bold text-gray-900 text-xs md:text-sm mb-1">{title}</h3>
-      <p className="text-gray-400 text-xs hidden sm:block">{text}</p>
-    </Link>
   )
 }

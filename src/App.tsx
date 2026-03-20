@@ -21,7 +21,7 @@ import AdminSurrenderPage from './pages/admin/AdminSurrenderPage'
 
 function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', overflowX: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', overflowX: 'hidden', backgroundColor: '#f7f4ef' }}>
       <Navbar />
       <main style={{ flex: 1 }}>{children}</main>
       <Footer />

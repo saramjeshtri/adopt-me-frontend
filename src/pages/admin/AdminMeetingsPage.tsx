@@ -62,13 +62,20 @@ export default function AdminMeetingsPage() {
     }
   }
 
-  const filtered = meetings.filter(m =>
-    !search ||
-    m.visitor_name.toLowerCase().includes(search.toLowerCase()) ||
-    (m.visitor_email ?? '').toLowerCase().includes(search.toLowerCase()) ||
-    String(m.meeting_id).includes(search) ||
-    String(m.animal_id).includes(search)
-  )
+  const filtered = meetings.filter(m => {
+    if (!search) return true
+    const q = search.toLowerCase().trim()
+    // Exact ID match — typing "2" only shows meeting #2, not #12 or #20
+    if (/^\d+$/.test(q)) {
+      return String(m.meeting_id) === q
+    }
+    // Otherwise match by name or email
+    return (
+      m.visitor_name.toLowerCase().includes(q) ||
+      (m.visitor_email ?? '').toLowerCase().includes(q) ||
+      (m.visitor_phone ?? '').includes(q)
+    )
+  })
 
   return (
     <div>
@@ -92,7 +99,7 @@ export default function AdminMeetingsPage() {
         <div className="relative flex-1 min-w-48">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
           <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Kërko sipas emrit, emailit, ID..."
+            placeholder="Kërko sipas emrit, emailit, ose ID ekzakte..."
             className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500 transition-colors" />
         </div>
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
@@ -187,7 +194,6 @@ export default function AdminMeetingsPage() {
                 </select>
               </div>
 
-              {/* Warning if cancelling */}
               {newStatus === 'Anulluar' && selected.status !== 'Anulluar' && (
                 <div className="bg-red-900/20 border border-red-900/30 text-red-400 text-xs rounded-xl px-4 py-3">
                   ⚠️ Anulimi i takimit do të çlirojë kafshën për takime të reja.

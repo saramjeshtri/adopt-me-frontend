@@ -121,6 +121,9 @@ export const adminUpdateSurrenderStatus = (id: number, status: string) =>
 export const adminAcceptSurrender = (id: number, data: object) =>
   api.post(`/admin/surrender/${id}/accept`, data).then(res => res.data)
 
+export const adminRejectSurrender = (id: number, reason: string) =>
+  api.post(`/admin/surrender/${id}/reject`, { reason }).then(res => res.data)
+
 export const adminDeleteSurrender = (id: number) =>
   api.delete(`/admin/surrender/${id}`).then(res => res.data)
 

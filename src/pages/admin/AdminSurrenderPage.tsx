@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Heart, Phone, Mail, CheckCircle, AlertCircle, X, ChevronDown, Eye } from 'lucide-react'
+import { Heart, Phone, Mail, CheckCircle, AlertCircle, X, ChevronDown, Eye, Inbox , ImageIcon} from 'lucide-react'
 import {
-  adminGetSurrenders, adminUpdateSurrenderStatus,
+  adminGetSurrenders, adminUpdateSurrenderStatus, adminRejectSurrender,
   adminAcceptSurrender,
 } from '../../api/client'
 
@@ -46,6 +46,7 @@ export default function AdminSurrenderPage() {
 
   // Reject confirm
   const [rejectId, setRejectId] = useState<number | null>(null)
+  const [rejectReason, setRejectReason] = useState("")
   const [rejecting, setRejecting] = useState(false)
 
   const showToast = (type: 'success' | 'error', msg: string) => {
@@ -90,9 +91,10 @@ export default function AdminSurrenderPage() {
     if (!rejectId) return
     setRejecting(true)
     try {
-      await adminUpdateSurrenderStatus(rejectId, 'Rejected')
-      showToast('success', 'Kërkesa u refuzua.')
+      await adminRejectSurrender(rejectId, rejectReason || 'Nuk u dha arsye specifike.')
+      showToast('success', 'Kërkesa u refuzua me sukses.')
       setRejectId(null)
+      setRejectReason('')
       setSelected(null)
       load()
     } catch { showToast('error', 'Ndodhi një gabim.') }
@@ -148,7 +150,9 @@ export default function AdminSurrenderPage() {
         <div className="text-center py-16 text-gray-500 text-sm">Duke ngarkuar...</div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <div className="text-4xl mb-3">🏠</div>
+          <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Inbox size={26} className="text-gray-500" />
+          </div>
           <p className="text-gray-400">Nuk ka kërkesa në këtë kategori.</p>
         </div>
       ) : (
@@ -165,7 +169,7 @@ export default function AdminSurrenderPage() {
                       <span className="text-white font-semibold">{s.owner_name}</span>
                       <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${st.cls}`}>{st.label}</span>
                       {s.media.length > 0 && (
-                        <span className="text-xs text-gray-500">📷 {s.media.length} foto</span>
+                        <span className="text-xs text-gray-500 flex items-center gap-1"><ImageIcon size={11} /> {s.media.length} foto</span>
                       )}
                     </div>
                     <div className="flex flex-wrap gap-4 text-xs text-gray-400 mb-2">
@@ -198,7 +202,7 @@ export default function AdminSurrenderPage() {
                           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-green-400 hover:text-green-300 bg-green-900/20 hover:bg-green-900/30 transition-all cursor-pointer border border-green-900/30">
                           <Heart size={13} /> Prano
                         </button>
-                        <button onClick={() => setRejectId(s.surrender_id)}
+                        <button onClick={() => { setRejectId(s.surrender_id); setRejectReason('') }}
                           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-red-400 hover:text-red-300 bg-red-900/20 hover:bg-red-900/30 transition-all cursor-pointer border border-red-900/30">
                           <X size={13} /> Refuzo
                         </button>
@@ -265,7 +269,7 @@ export default function AdminSurrenderPage() {
                   className="flex-1 bg-green-700 hover:bg-green-600 text-white py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer flex items-center justify-center gap-2">
                   <Heart size={14} /> Prano & Shto në Adoptim
                 </button>
-                <button onClick={() => { setRejectId(selected.surrender_id); setSelected(null) }}
+                <button onClick={() => { setRejectId(selected.surrender_id); setRejectReason(''); setSelected(null) }}
                   className="flex-1 border border-white/10 text-gray-400 hover:text-white py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer">
                   Refuzo
                 </button>
@@ -350,7 +354,19 @@ export default function AdminSurrenderPage() {
               <X size={22} className="text-red-400" />
             </div>
             <h3 className="text-white font-bold text-lg text-center mb-2">Refuzo kërkesën?</h3>
-            <p className="text-gray-400 text-sm text-center mb-6">Pronari nuk do të njoftohet automatikisht.</p>
+            <p className="text-gray-400 text-sm text-center mb-4">
+'Shkruani arsyen e refuzimit (opsionale).'
+            </p>
+            <div className="mb-4">
+              <label className="text-xs text-gray-400 uppercase tracking-wide mb-1.5 block">Arsyeja e refuzimit</label>
+              <textarea
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                placeholder="p.sh. Strehimorja është plot momentalisht..."
+                rows={3}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500 resize-none"
+              />
+            </div>
             <div className="flex gap-3">
               <button onClick={() => setRejectId(null)}
                 className="flex-1 border border-white/10 text-gray-400 hover:text-white py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer">
