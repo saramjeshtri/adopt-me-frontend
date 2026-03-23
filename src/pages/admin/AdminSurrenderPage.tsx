@@ -64,7 +64,9 @@ export default function AdminSurrenderPage() {
 
   useEffect(() => { load() }, [])
 
-  const filtered = surrenders.filter(s => filter === 'all' || s.status === filter)
+  const filtered = surrenders
+  .filter(s => filter === 'all' || s.status === filter)
+  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
   const handleContact = async (id: number) => {
     try {

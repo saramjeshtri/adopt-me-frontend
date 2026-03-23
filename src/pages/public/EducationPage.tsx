@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { Calendar, MapPin, Clock, Users, Heart, BookOpen, ArrowRight, CalendarX, PawPrint } from 'lucide-react'
+import { MapPin, Clock, Users, Heart, BookOpen, ArrowRight, CalendarX, PawPrint } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { getEvents } from '../../api/client'
 
@@ -60,12 +60,12 @@ interface Event {
   event_id: number; title: string; description: string
   location: string; event_date: string; event_time: string
   is_free: boolean; max_participants?: number; organizer?: string
+  image_url?: string
 }
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('sq-AL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
-function isUpcoming(dateStr: string) { return new Date(dateStr) >= new Date() }
 
 function FadeUp({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -86,17 +86,10 @@ function FadeUp({ children, delay = 0, className = '' }: { children: React.React
 export default function EducationPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeFilter, setActiveFilter] = useState<'all' | 'upcoming' | 'past'>('upcoming')
 
   useEffect(() => {
     getEvents().then(setEvents).catch(() => {}).finally(() => setLoading(false))
   }, [])
-
-  const filteredEvents = events.filter(e => {
-    if (activeFilter === 'upcoming') return isUpcoming(e.event_date)
-    if (activeFilter === 'past') return !isUpcoming(e.event_date)
-    return true
-  })
 
   return (
     <div style={{ backgroundColor: '#faf9f7', minHeight: '100vh' }}>
@@ -104,12 +97,12 @@ export default function EducationPage() {
       {/* HERO */}
       <section className="relative overflow-hidden text-center" style={{ paddingTop: '7rem', paddingBottom: '5rem', background: 'linear-gradient(135deg, #5b21b6 0%, #be185d 100%)' }}>
         <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 60%, #f5f0eb 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, transparent 60%, #faf9f7 100%)' }} />
         <FadeUp className="relative z-10 px-6">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ backgroundColor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }}>
-            <BookOpen size={28} style={{ color: 'white' }} />
+            <BookOpen size={28} className="text-white" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-black mb-3 text-white">Edukim & Aktivitete</h1>
+          <h1 className="text-4xl md:text-5xl font-black mb-3 text-white">Edukim &amp; Aktivitete</h1>
           <p className="max-w-md mx-auto text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
             Udhëzues praktikë për kujdesin e kafshëve dhe aktivitete nga Bashkia e Tiranës
           </p>
@@ -118,14 +111,14 @@ export default function EducationPage() {
 
       {/* STATS */}
       <div className="max-w-3xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4 items-stretch">
           {[
-            { icon: BookOpen, label: 'Artikuj', value: `${ARTICLES.length}`, color: '#e02424', bg: '#fef2f2' },
-            { icon: Users, label: 'Evente aktive', value: String(events.filter(e => isUpcoming(e.event_date)).length || '—'), color: '#2563eb', bg: '#eff6ff' },
-            { icon: Heart, label: 'Adoptim falas', value: '100%', color: '#16a34a', bg: '#f0fdf4' },
+            { icon: BookOpen, label: 'Artikuj',        value: `${ARTICLES.length}`, color: '#e02424', bg: '#fef2f2' },
+            { icon: Users,    label: 'Evente gjithsej', value: String(events.length || '—'),           color: '#2563eb', bg: '#eff6ff' },
+            { icon: Heart,    label: 'Adoptim falas',   value: '100%',                                 color: '#16a34a', bg: '#f0fdf4' },
           ].map(({ icon: Icon, label, value, color, bg }, i) => (
-            <FadeUp key={label} delay={i * 80}>
-              <div className="bg-white rounded-2xl p-5 text-center" style={{ border: '1px solid #f3f4f6' }}>
+            <FadeUp key={label} delay={i * 80} className="flex">
+              <div className="bg-white rounded-2xl p-5 text-center flex flex-col items-center justify-center w-full" style={{ border: '1px solid #f3f4f6' }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: bg }}>
                   <Icon size={18} style={{ color }} />
                 </div>
@@ -141,18 +134,17 @@ export default function EducationPage() {
       <section className="max-w-6xl mx-auto px-6 pb-20">
         <FadeUp>
           <div className="mb-8">
-            <h2 className="text-2xl md:text-3xl font-black" style={{ color: '#111827' }}>Artikuj & Udhëzues</h2>
+            <h2 className="text-2xl md:text-3xl font-black" style={{ color: '#111827' }}>Artikuj &amp; Udhëzues</h2>
             <p className="text-sm mt-1" style={{ color: '#9ca3af' }}>Këshilla praktike për çdo pronar kafshësh</p>
           </div>
         </FadeUp>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
           {ARTICLES.map((article, i) => {
             const catStyle = CATEGORY_COLORS[article.category] ?? { bg: '#f9fafb', color: '#6b7280' }
             return (
-              <FadeUp key={article.id} delay={i * 70} className="h-full">
+              <FadeUp key={article.id} delay={i * 70} className="flex">
                 <Link to={`/edukim/artikull/${article.id}`}
-                  className="bg-white rounded-2xl overflow-hidden hover:-translate-y-1.5 transition-all duration-300 hover:shadow-xl flex flex-col h-full"
+                  className="bg-white rounded-2xl overflow-hidden hover:-translate-y-1.5 transition-all duration-300 hover:shadow-xl flex flex-col w-full"
                   style={{ border: '1px solid #f3f4f6' }}>
                   <div className="h-1.5 w-full" style={{ backgroundColor: article.accent }} />
                   <div className="p-5 flex flex-col flex-1">
@@ -166,7 +158,7 @@ export default function EducationPage() {
                     </div>
                     <h3 className="font-black text-base mb-2 leading-snug" style={{ color: '#111827' }}>{article.title}</h3>
                     <p className="text-sm leading-relaxed line-clamp-3 flex-1 mb-4" style={{ color: '#6b7280' }}>{article.excerpt}</p>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mt-auto">
                       <span className="text-xs flex items-center gap-1" style={{ color: '#d1d5db' }}>
                         <Clock size={11} /> {article.readTime} lexim
                       </span>
@@ -184,80 +176,94 @@ export default function EducationPage() {
 
       {/* EVENTS */}
       <section className="px-6 pb-20" style={{ backgroundColor: '#ffffff', borderTop: '1px solid #f3f4f6', paddingTop: '5rem' }}>
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <FadeUp>
-            <div className="text-center mb-10">
+            <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-full mb-5" style={{ backgroundColor: '#fef2f2', color: '#e02424', border: '1px solid #fecaca' }}>
                 <Users size={12} /> Bashkia Tiranë
               </div>
-              <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ color: '#111827' }}>Aktivitete & Evente</h2>
+              <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ color: '#111827' }}>Aktivitete &amp; Evente</h2>
               <p className="text-sm" style={{ color: '#9ca3af' }}>Aktivitete të organizuara nga Bashkia e Tiranës për mbrojtjen e kafshëve</p>
             </div>
           </FadeUp>
-
-          <div className="flex justify-center gap-2 mb-8">
-            {([['upcoming', 'Të ardhshme'], ['all', 'Të gjitha'], ['past', 'Të kaluara']] as const).map(([val, label]) => (
-              <button key={val} onClick={() => setActiveFilter(val)}
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer"
-                style={activeFilter === val
-                  ? { backgroundColor: '#111827', color: '#ffffff' }
-                  : { backgroundColor: '#f9fafb', color: '#6b7280', border: '1px solid #f3f4f6' }}>
-                {label}
-              </button>
-            ))}
-          </div>
 
           {loading ? (
             <div className="text-center py-16">
               <div className="w-8 h-8 border-2 border-red-200 border-t-red-500 rounded-full animate-spin mx-auto mb-3" />
               <p className="text-sm" style={{ color: '#9ca3af' }}>Duke ngarkuar eventet...</p>
             </div>
-          ) : filteredEvents.length === 0 ? (
+          ) : events.length === 0 ? (
             <FadeUp>
               <div className="text-center py-16">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#f9fafb' }}>
                   <CalendarX size={24} style={{ color: '#d1d5db' }} />
                 </div>
-                <p className="font-semibold" style={{ color: '#374151' }}>
-                  {activeFilter === 'upcoming' ? 'Nuk ka evente të planifikuara.' : 'Nuk ka evente në këtë kategori.'}
-                </p>
+                <p className="font-semibold" style={{ color: '#374151' }}>Nuk ka evente të shtuara ende.</p>
                 <p className="text-sm mt-1" style={{ color: '#9ca3af' }}>Kontrolloni përsëri së shpejti!</p>
               </div>
             </FadeUp>
           ) : (
-            <div className="space-y-4">
-              {filteredEvents.map((event, i) => {
-                const upcoming = isUpcoming(event.event_date)
-                return (
-                  <FadeUp key={event.event_id} delay={i * 60}>
-                    <div className="bg-white rounded-2xl p-6 transition-all hover:shadow-md" style={{ border: `1px solid ${upcoming ? '#f3f4f6' : '#f9fafb'}`, opacity: upcoming ? 1 : 0.65 }}>
-                      <div className="flex items-start gap-5">
-                        <div className="shrink-0 w-16 h-16 rounded-2xl flex flex-col items-center justify-center text-center"
-                          style={upcoming ? { backgroundColor: '#e02424', color: '#ffffff' } : { backgroundColor: '#f9fafb', color: '#9ca3af' }}>
-                          <span className="text-xl font-black leading-none">{new Date(event.event_date).getDate()}</span>
-                          <span className="text-xs mt-0.5 opacity-80">{new Date(event.event_date).toLocaleDateString('sq-AL', { month: 'short' })}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {events.map((event, i) => (
+                <FadeUp key={event.event_id} delay={i * 60} className="flex">
+                  <div className="bg-white rounded-2xl overflow-hidden flex flex-col w-full hover:-translate-y-1 transition-all duration-300 hover:shadow-md"
+                    style={{ border: '1px solid #f3f4f6' }}>
+
+                    {/* Cover image or date header */}
+                    {event.image_url ? (
+                      <div className="relative h-44 overflow-hidden">
+                        <img src={event.image_url} alt={event.title} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%)' }} />
+                        <div className="absolute top-3 left-3 rounded-xl px-3 py-1.5 text-center" style={{ backgroundColor: '#e02424', backdropFilter: 'blur(8px)' }}>
+                          <p className="text-white font-black text-lg leading-none">{new Date(event.event_date).getDate()}</p>
+                          <p className="text-white/80 text-xs">{new Date(event.event_date).toLocaleDateString('sq-AL', { month: 'short' })}</p>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-3 flex-wrap mb-1">
-                            <h3 className="font-black text-base" style={{ color: '#111827' }}>{event.title}</h3>
-                            <div className="flex items-center gap-2 shrink-0">
-                              {event.is_free && <span className="text-xs font-bold px-2.5 py-1 rounded-lg" style={{ backgroundColor: '#f0fdf4', color: '#16a34a' }}>Falas</span>}
-                              {!upcoming && <span className="text-xs font-bold px-2.5 py-1 rounded-lg" style={{ backgroundColor: '#f9fafb', color: '#9ca3af' }}>I kaluar</span>}
-                            </div>
-                          </div>
-                          <p className="text-sm mb-3 leading-relaxed" style={{ color: '#6b7280' }}>{event.description}</p>
-                          <div className="flex flex-wrap gap-4 text-xs" style={{ color: '#9ca3af' }}>
-                            <span className="flex items-center gap-1.5"><Calendar size={11} style={{ color: '#e02424' }} />{formatDate(event.event_date)}</span>
-                            <span className="flex items-center gap-1.5"><Clock size={11} style={{ color: '#e02424' }} />{event.event_time}</span>
-                            <span className="flex items-center gap-1.5"><MapPin size={11} style={{ color: '#e02424' }} />{event.location}</span>
-                            {event.max_participants && <span className="flex items-center gap-1.5"><Users size={11} style={{ color: '#e02424' }} />Maks. {event.max_participants}</span>}
-                          </div>
+                        {event.is_free && (
+                          <span className="absolute top-3 right-3 text-xs font-bold px-2.5 py-1 rounded-lg" style={{ backgroundColor: '#f0fdf4', color: '#16a34a' }}>Falas</span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="h-20 flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: '#e02424' }}>
+                        <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(white 1px, transparent 1px)', backgroundSize: '14px 14px' }} />
+                        <div className="text-center relative z-10">
+                          <p className="text-3xl font-black leading-none text-white">{new Date(event.event_date).getDate()}</p>
+                          <p className="text-xs font-semibold mt-0.5 text-white/80">
+                            {new Date(event.event_date).toLocaleDateString('sq-AL', { month: 'long', year: 'numeric' })}
+                          </p>
                         </div>
+                        {event.is_free && (
+                          <span className="absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>Falas</span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Content */}
+                    <div className="p-5 flex flex-col flex-1">
+                      <h3 className="font-black text-base leading-tight mb-2" style={{ color: '#111827' }}>{event.title}</h3>
+                      <p className="text-sm leading-relaxed mb-4 flex-1" style={{ color: '#6b7280' }}>{event.description}</p>
+                      <div className="space-y-1.5 mt-auto">
+                        <div className="flex items-center gap-2 text-xs" style={{ color: '#9ca3af' }}>
+                          <Clock size={11} style={{ color: '#e02424' }} />
+                          {formatDate(event.event_date)} · {event.event_time}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs" style={{ color: '#9ca3af' }}>
+                          <MapPin size={11} style={{ color: '#e02424' }} />
+                          {event.location}
+                        </div>
+                        {event.max_participants && (
+                          <div className="flex items-center gap-2 text-xs" style={{ color: '#9ca3af' }}>
+                            <Users size={11} style={{ color: '#e02424' }} />
+                            Maks. {event.max_participants} pjesëmarrës
+                          </div>
+                        )}
+                        {event.organizer && (
+                          <p className="text-xs pt-1" style={{ color: '#d1d5db' }}>Organizuar nga: {event.organizer}</p>
+                        )}
                       </div>
                     </div>
-                  </FadeUp>
-                )
-              })}
+                  </div>
+                </FadeUp>
+              ))}
             </div>
           )}
         </div>

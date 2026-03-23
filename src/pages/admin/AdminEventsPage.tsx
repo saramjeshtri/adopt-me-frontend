@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
-import { Plus, Edit2, Trash2, MapPin, Clock, Users, X, CheckCircle, AlertCircle , CalendarX} from 'lucide-react'
-import { adminGetEvents, adminCreateEvent, adminUpdateEvent, adminDeleteEvent } from '../../api/client'
+import { useEffect, useState, useRef } from 'react'
+import { Plus, Edit2, Trash2, MapPin, Clock, Users, X, CheckCircle, AlertCircle, CalendarX, Image, Upload } from 'lucide-react'
+import { adminGetEvents, adminCreateEvent, adminUpdateEvent, adminDeleteEvent, adminUploadEventImage } from '../../api/client'
 
 interface Event {
   event_id:         number
@@ -12,6 +12,7 @@ interface Event {
   is_free:          boolean
   max_participants?: number
   organizer?:       string
+  image_url?:       string
 }
 
 const EMPTY_FORM = {
@@ -29,16 +30,23 @@ function isUpcoming(dateStr: string) {
   return new Date(dateStr) >= new Date()
 }
 
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('sq-AL', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
 export default function AdminEventsPage() {
-  const [events, setEvents]   = useState<Event[]>([])
-  const [loading, setLoading] = useState(true)
-  const [modal, setModal]     = useState<'create' | 'edit' | null>(null)
+  const [events, setEvents]     = useState<Event[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [modal, setModal]       = useState<'create' | 'edit' | null>(null)
   const [selected, setSelected] = useState<Event | null>(null)
-  const [form, setForm]       = useState({ ...EMPTY_FORM })
-  const [saving, setSaving]   = useState(false)
+  const [form, setForm]         = useState({ ...EMPTY_FORM })
+  const [saving, setSaving]     = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
-  const [toast, setToast]     = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
+  const [toast, setToast]       = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
+  const [uploadingId, setUploadingId] = useState<number | null>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const [imageTargetId, setImageTargetId] = useState<number | null>(null)
 
   const showToast = (type: 'success' | 'error', msg: string) => {
     setToast({ type, msg })
@@ -49,10 +57,7 @@ export default function AdminEventsPage() {
 
   const load = () => {
     setLoading(true)
-    adminGetEvents()
-      .then(setEvents)
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    adminGetEvents().then(setEvents).catch(() => {}).finally(() => setLoading(false))
   }
 
   const openCreate = () => {
@@ -80,10 +85,7 @@ export default function AdminEventsPage() {
     if (!form.title || !form.event_date || !form.event_time || !form.location) return
     setSaving(true)
     try {
-      const payload = {
-        ...form,
-        max_participants: form.max_participants ? Number(form.max_participants) : undefined,
-      }
+      const payload = { ...form, max_participants: form.max_participants ? Number(form.max_participants) : undefined }
       if (modal === 'create') {
         await adminCreateEvent(payload)
         showToast('success', 'Eventi u krijua me sukses.')
@@ -115,12 +117,35 @@ export default function AdminEventsPage() {
     }
   }
 
-  const setF = (key: string, val: any) => setForm(f => ({ ...f, [key]: val }))
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !imageTargetId) return
+    setUploadingId(imageTargetId)
+    try {
+      await adminUploadEventImage(imageTargetId, file)
+      showToast('success', 'Foto u ngarkua me sukses.')
+      load()
+    } catch {
+      showToast('error', 'Ngarkimi dështoi.')
+    } finally {
+      setUploadingId(null)
+      setImageTargetId(null)
+      e.target.value = ''
+    }
+  }
 
+  const setF = (key: string, val: any) => setForm(f => ({ ...f, [key]: val }))
   const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500 transition-colors"
+
+  const upcoming = events.filter(e => isUpcoming(e.event_date))
+  const past     = events.filter(e => !isUpcoming(e.event_date))
 
   return (
     <div>
+      {/* Hidden image input */}
+      <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+
+      {/* Toast */}
       {toast && (
         <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl text-sm font-medium
           ${toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
@@ -133,7 +158,9 @@ export default function AdminEventsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white mb-1">Aktivitete & Evente</h1>
-          <p className="text-gray-500 text-sm">{events.length} evente gjithsej</p>
+          <p className="text-gray-500 text-sm">
+            {upcoming.length} të ardhshme · {past.length} të kaluara
+          </p>
         </div>
         <button onClick={openCreate}
           className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer shadow-lg shadow-red-900/30">
@@ -141,12 +168,13 @@ export default function AdminEventsPage() {
         </button>
       </div>
 
-      {/* Events list */}
       {loading ? (
         <div className="text-center py-16 text-gray-500 text-sm">Duke ngarkuar eventet...</div>
       ) : events.length === 0 ? (
         <div className="text-center py-16">
-          <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4"><CalendarX size={26} className="text-gray-500" /></div>
+          <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <CalendarX size={26} className="text-gray-500" />
+          </div>
           <p className="text-gray-400 font-medium">Nuk ka evente ende.</p>
           <button onClick={openCreate} className="mt-4 text-red-400 text-sm hover:text-red-300 cursor-pointer transition-colors">
             + Shto eventin e parë
@@ -155,58 +183,76 @@ export default function AdminEventsPage() {
       ) : (
         <div className="space-y-3">
           {events.map(event => {
-            const upcoming = isUpcoming(event.event_date)
+            const up = isUpcoming(event.event_date)
             return (
               <div key={event.event_id}
-                className="rounded-2xl border p-5 flex items-start gap-4 transition-all hover:border-white/20"
+                className="rounded-2xl border overflow-hidden transition-all hover:border-white/20"
                 style={{ backgroundColor: '#1e293b', borderColor: '#334155' }}>
 
-                {/* Date block */}
-                <div className={`shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center
-                  ${upcoming ? 'bg-red-600 text-white' : 'bg-white/5 text-gray-500'}`}>
-                  <span className="text-lg font-bold leading-none">
-                    {new Date(event.event_date).getDate()}
-                  </span>
-                  <span className="text-xs opacity-80">
-                    {new Date(event.event_date).toLocaleDateString('sq-AL', { month: 'short' })}
-                  </span>
-                </div>
+                <div className="flex items-stretch">
+                  {/* Cover image or date block */}
+                  {event.image_url ? (
+                    <div className="relative w-28 shrink-0 overflow-hidden">
+                      <img src={event.image_url} alt={event.title} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#1e293b]/40" />
+                      {/* Upload overlay */}
+                      <button
+                        onClick={() => { setImageTargetId(event.event_id); imageInputRef.current?.click() }}
+                        className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/50 transition-all group cursor-pointer">
+                        <Upload size={18} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={`shrink-0 w-16 flex flex-col items-center justify-center text-center m-4 rounded-xl
+                      ${up ? 'bg-red-600 text-white' : 'bg-white/5 text-gray-500'}`}>
+                      <span className="text-xl font-black leading-none">{new Date(event.event_date).getDate()}</span>
+                      <span className="text-xs opacity-80 mt-0.5">
+                        {new Date(event.event_date).toLocaleDateString('sq-AL', { month: 'short' })}
+                      </span>
+                    </div>
+                  )}
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-white font-semibold text-sm">{event.title}</h3>
-                        {event.is_free && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-green-900/40 text-green-400 font-medium">Falas</span>
-                        )}
-                        {!upcoming && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-500 font-medium">I kaluar</span>
-                        )}
+                  {/* Info */}
+                  <div className="flex-1 min-w-0 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <h3 className="text-white font-semibold text-sm">{event.title}</h3>
+                          {event.is_free && <span className="text-xs px-2 py-0.5 rounded-full bg-green-900/40 text-green-400">Falas</span>}
+                          {!up && <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-500">I kaluar</span>}
+                        </div>
+                        <p className="text-gray-400 text-xs line-clamp-1 mb-2">{event.description}</p>
+                        <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                          <span className="flex items-center gap-1"><Clock size={10} /> {event.event_time} · {formatDate(event.event_date)}</span>
+                          <span className="flex items-center gap-1"><MapPin size={10} /> {event.location}</span>
+                          {event.max_participants && <span className="flex items-center gap-1"><Users size={10} /> {event.max_participants}</span>}
+                        </div>
                       </div>
-                      <p className="text-gray-400 text-xs mt-1 line-clamp-2">{event.description}</p>
-                    </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => openEdit(event)}
-                        className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all cursor-pointer">
-                        <Edit2 size={14} />
-                      </button>
-                      <button onClick={() => setDeleteId(event.event_id)}
-                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-all cursor-pointer">
-                        <Trash2 size={14} />
-                      </button>
+                      {/* Actions */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        {!event.image_url && (
+                          <button
+                            onClick={() => { setImageTargetId(event.event_id); imageInputRef.current?.click() }}
+                            disabled={uploadingId === event.event_id}
+                            className="p-2 text-gray-500 hover:text-blue-400 hover:bg-blue-900/20 rounded-lg transition-all cursor-pointer"
+                            title="Ngarko foto">
+                            {uploadingId === event.event_id
+                              ? <span className="w-3.5 h-3.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin block" />
+                              : <Image size={14} />
+                            }
+                          </button>
+                        )}
+                        <button onClick={() => openEdit(event)}
+                          className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all cursor-pointer">
+                          <Edit2 size={14} />
+                        </button>
+                        <button onClick={() => setDeleteId(event.event_id)}
+                          className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-all cursor-pointer">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-4 mt-2 text-xs text-gray-500">
-                    <span className="flex items-center gap-1"><Clock size={11} /> {event.event_time}</span>
-                    <span className="flex items-center gap-1"><MapPin size={11} /> {event.location}</span>
-                    {event.max_participants && (
-                      <span className="flex items-center gap-1"><Users size={11} /> {event.max_participants} pjesëmarrës</span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -219,7 +265,6 @@ export default function AdminEventsPage() {
       {modal && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-start justify-center p-4 overflow-y-auto">
           <div className="w-full max-w-lg rounded-2xl border my-6" style={{ backgroundColor: '#1e293b', borderColor: '#334155' }}>
-
             <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: '#334155' }}>
               <h2 className="text-lg font-bold text-white">
                 {modal === 'create' ? 'Shto event të ri' : 'Ndrysho eventin'}
@@ -260,18 +305,22 @@ export default function AdminEventsPage() {
                 value={form.max_participants}
                 onChange={e => setF('max_participants', e.target.value)} className={inputCls} />
 
-              {/* Is free toggle */}
               <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
                 <div>
                   <p className="text-sm text-white font-medium">Eventi është falas</p>
                   <p className="text-xs text-gray-500 mt-0.5">Do të shfaqet badge "Falas" në faqe</p>
                 </div>
-                <button
-                  onClick={() => setF('is_free', !form.is_free)}
+                <button onClick={() => setF('is_free', !form.is_free)}
                   className={`w-11 h-6 rounded-full transition-all cursor-pointer relative ${form.is_free ? 'bg-red-600' : 'bg-white/10'}`}>
                   <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${form.is_free ? 'left-5' : 'left-0.5'}`} />
                 </button>
               </div>
+
+              {modal === 'create' && (
+                <p className="text-xs text-gray-500 px-1">
+                  💡 Pasi të krijohet eventi, mund të ngarkoni një foto nga lista.
+                </p>
+              )}
             </div>
 
             <div className="flex gap-3 px-5 pb-5">
@@ -280,7 +329,7 @@ export default function AdminEventsPage() {
                 Anulo
               </button>
               <button onClick={handleSave} disabled={saving || !form.title || !form.event_date || !form.event_time || !form.location}
-                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-900 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer flex items-center justify-center gap-2">
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer flex items-center justify-center gap-2">
                 {saving
                   ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Duke ruajtur...</>
                   : modal === 'create' ? <><Plus size={14} /> Shto eventin</> : 'Ruaj ndryshimet'
@@ -291,7 +340,7 @@ export default function AdminEventsPage() {
         </div>
       )}
 
-      {/* Delete confirmation */}
+      {/* Delete confirm */}
       {deleteId !== null && (
         <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4">
           <div className="w-full max-w-sm rounded-2xl border p-6" style={{ backgroundColor: '#1e293b', borderColor: '#334155' }}>

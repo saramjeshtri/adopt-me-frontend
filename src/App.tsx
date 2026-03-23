@@ -10,6 +10,7 @@ import TrackReportPage from './pages/public/TrackReportPage'
 import EducationPage from './pages/public/EducationPage'
 import ArticlePage from './pages/public/ArticlePage'
 import ContactPage from './pages/public/ContactPage'
+import DonatePage from './pages/public/DonatePage'
 
 import AdminLayout from './pages/admin/AdminLayout'
 import AdminReportsPage from './pages/admin/AdminReportsPage'
@@ -40,6 +41,7 @@ export default function App() {
       <Route path="/edukim" element={<PublicLayout><EducationPage /></PublicLayout>} />
       <Route path="/edukim/artikull/:id" element={<PublicLayout><ArticlePage /></PublicLayout>} />
       <Route path="/kontakt" element={<PublicLayout><ContactPage /></PublicLayout>} />
+      <Route path="/donacion" element={<PublicLayout><DonatePage /></PublicLayout>} />
       <Route path="/admin" element={<AdminLayout />}>
         <Route path="reports"   element={<AdminReportsPage />} />
         <Route path="animals"   element={<AdminAnimalsPage />} />

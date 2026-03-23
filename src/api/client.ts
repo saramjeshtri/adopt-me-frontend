@@ -99,6 +99,12 @@ export const adminUpdateEvent = (id: number, data: object) =>
 export const adminDeleteEvent = (id: number) =>
   api.delete(`/admin/events/${id}`).then(res => res.data)
 
+export const adminUploadEventImage = (id: number, file: File) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  return api.post(`/admin/events/${id}/image`, fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then(res => res.data)
+}
+
 // SURRENDER (public)
 export const createSurrender = (data: object) =>
   api.post('/surrender/', data).then(res => res.data)

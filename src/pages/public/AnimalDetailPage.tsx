@@ -4,6 +4,21 @@ import { Heart, Calendar, MapPin, Shield, ArrowLeft, Phone, CheckCircle } from '
 import { getAnimal, createMeeting } from '../../api/client'
 import type { Animal } from '../../types'
 
+const validatePhone = (v: string) => {
+  if (!v) return ''
+  const cleaned = v.replace(/\s/g, '')
+  if (!/^(\+355|0)[6-9]\d{7,8}$/.test(cleaned))
+    return 'Numri nuk është valid (p.sh. +355 69 XXX XXXX ose 069 XXX XXXX)'
+  return ''
+}
+
+const validateEmail = (v: string) => {
+  if (!v) return ''
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))
+    return 'Adresa email nuk është e vlefshme'
+  return ''
+}
+
 export default function AnimalDetailPage() {
   const { id } = useParams()
   const [animal, setAnimal] = useState<Animal | null>(null)
@@ -38,9 +53,11 @@ export default function AnimalDetailPage() {
   const validate = () => {
     const errors: Record<string, string> = {}
     if (!form.visitor_first_name.trim()) errors.visitor_first_name = 'Emri është i detyrueshëm.'
-    if (!form.visitor_last_name.trim()) errors.visitor_last_name = 'Mbiemri është i detyrueshëm.'
-    if (!form.visitor_email.trim()) errors.visitor_email = 'Emaili është i detyrueshëm.'
-    if (!form.preferred_date) errors.preferred_date = 'Data e takimit është e detyrueshme.'
+    if (!form.visitor_last_name.trim())  errors.visitor_last_name  = 'Mbiemri është i detyrueshëm.'
+    if (!form.visitor_email.trim())      errors.visitor_email      = 'Emaili është i detyrueshëm.'
+    else { const e = validateEmail(form.visitor_email); if (e) errors.visitor_email = e }
+    if (form.visitor_phone) { const e = validatePhone(form.visitor_phone); if (e) errors.visitor_phone = e }
+    if (!form.preferred_date)            errors.preferred_date     = 'Data e takimit është e detyrueshme.'
     return errors
   }
 
@@ -69,10 +86,17 @@ export default function AnimalDetailPage() {
     }
   }
 
+  const setF = (field: string, value: string) =>
+    setForm(f => ({ ...f, [field]: value }))
+
+  const clearErr = (field: string) =>
+    setFieldErrors(f => ({ ...f, [field]: '' }))
+
   const inputBase = (field: string) =>
-    `w-full rounded-xl px-4 py-3 text-sm transition-all outline-none ${fieldErrors[field]
-      ? 'border-2 border-red-400 bg-red-50'
-      : 'border border-gray-200 bg-gray-50 focus:border-gray-900 focus:bg-white'
+    `w-full rounded-xl px-4 py-3 text-sm transition-all outline-none ${
+      fieldErrors[field]
+        ? 'border-2 border-red-400 bg-red-50'
+        : 'border border-gray-200 bg-gray-50 focus:border-gray-900 focus:bg-white'
     }`
 
   if (loading) return (
@@ -123,7 +147,7 @@ export default function AnimalDetailPage() {
             <div className="flex gap-2 flex-wrap">
               {animal.photos.map((photo: any) => (
                 <button key={photo.photo_id} onClick={() => setSelectedPhoto(photo.photo_url)}
-                  className={`w-18 h-18 rounded-xl overflow-hidden transition-all cursor-pointer`}
+                  className="rounded-xl overflow-hidden transition-all cursor-pointer"
                   style={{ width: 72, height: 72, border: selectedPhoto === photo.photo_url ? '3px solid #111827' : '2px solid transparent', opacity: selectedPhoto === photo.photo_url ? 1 : 0.7 }}>
                   <img src={photo.photo_url} alt="" className="w-full h-full object-cover" />
                 </button>
@@ -202,9 +226,7 @@ export default function AnimalDetailPage() {
                 <p className="text-sm mb-2" style={{ color: '#6b7280' }}>
                   Stafi i Bashkisë do t'ju kontaktojë në emailin ose numrin e dhënë.
                 </p>
-                <p className="text-xs mb-6" style={{ color: '#9ca3af' }}>
-                  Përgjigjia vonohet 1–2 ditë.
-                </p>
+                <p className="text-xs mb-6" style={{ color: '#9ca3af' }}>Përgjigjia vonohet 1–2 ditë.</p>
                 <Link to="/adopto" className="inline-flex items-center gap-1.5 text-sm font-semibold hover:opacity-70" style={{ color: '#e02424' }}>
                   <ArrowLeft size={14} /> Shiko kafshë të tjera
                 </Link>
@@ -222,45 +244,55 @@ export default function AnimalDetailPage() {
                 )}
 
                 <div className="space-y-3">
+                  {/* Name row */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <input type="text" placeholder="Emri" value={form.visitor_first_name}
-                        onChange={e => { setForm({ ...form, visitor_first_name: e.target.value }); setFieldErrors(p => ({ ...p, visitor_first_name: '' })) }}
+                      <input type="text" placeholder="Emri *" value={form.visitor_first_name}
+                        onChange={e => { setF('visitor_first_name', e.target.value); clearErr('visitor_first_name') }}
                         className={inputBase('visitor_first_name')} />
                       {fieldErrors.visitor_first_name && <p className="text-xs mt-1 ml-1" style={{ color: '#e02424' }}>{fieldErrors.visitor_first_name}</p>}
                     </div>
                     <div>
-                      <input type="text" placeholder="Mbiemri" value={form.visitor_last_name}
-                        onChange={e => { setForm({ ...form, visitor_last_name: e.target.value }); setFieldErrors(p => ({ ...p, visitor_last_name: '' })) }}
+                      <input type="text" placeholder="Mbiemri *" value={form.visitor_last_name}
+                        onChange={e => { setF('visitor_last_name', e.target.value); clearErr('visitor_last_name') }}
                         className={inputBase('visitor_last_name')} />
                       {fieldErrors.visitor_last_name && <p className="text-xs mt-1 ml-1" style={{ color: '#e02424' }}>{fieldErrors.visitor_last_name}</p>}
                     </div>
                   </div>
 
+                  {/* Email */}
                   <div>
-                    <input type="email" placeholder="Email" value={form.visitor_email}
-                      onChange={e => { setForm({ ...form, visitor_email: e.target.value }); setFieldErrors(p => ({ ...p, visitor_email: '' })) }}
+                    <input type="email" placeholder="Email *" value={form.visitor_email}
+                      onChange={e => { setF('visitor_email', e.target.value); clearErr('visitor_email') }}
+                      onBlur={e => { const err = validateEmail(e.target.value); if (err) setFieldErrors(f => ({ ...f, visitor_email: err })) }}
                       className={inputBase('visitor_email')} />
                     {fieldErrors.visitor_email && <p className="text-xs mt-1 ml-1" style={{ color: '#e02424' }}>{fieldErrors.visitor_email}</p>}
                   </div>
 
-                  <div className="relative">
-                    <Phone size={14} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: '#9ca3af' }} />
-                    <input type="tel" placeholder="Numri i telefonit" value={form.visitor_phone}
-                      onChange={e => setForm({ ...form, visitor_phone: e.target.value })}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 pl-10 text-sm outline-none focus:border-gray-900 bg-gray-50 focus:bg-white transition-all" />
+                  {/* Phone */}
+                  <div>
+                    <div className="relative">
+                      <Phone size={14} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: '#9ca3af' }} />
+                      <input type="tel" placeholder="+355 6X XXX XXXX (opsionale)" value={form.visitor_phone}
+                        onChange={e => { setF('visitor_phone', e.target.value); clearErr('visitor_phone') }}
+                        onBlur={e => { const err = validatePhone(e.target.value); if (err) setFieldErrors(f => ({ ...f, visitor_phone: err })) }}
+                        className={`pl-10 ${inputBase('visitor_phone')}`} />
+                    </div>
+                    {fieldErrors.visitor_phone && <p className="text-xs mt-1 ml-1" style={{ color: '#e02424' }}>{fieldErrors.visitor_phone}</p>}
                   </div>
 
+                  {/* Date */}
                   <div>
-                    <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#6b7280' }}>Data e preferuar për takim</label>
+                    <label className="text-xs font-semibold mb-1.5 block" style={{ color: '#6b7280' }}>Data e preferuar për takim *</label>
                     <input type="date" value={form.preferred_date}
-                      onChange={e => { setForm({ ...form, preferred_date: e.target.value }); setFieldErrors(p => ({ ...p, preferred_date: '' })) }}
+                      onChange={e => { setF('preferred_date', e.target.value); clearErr('preferred_date') }}
                       className={inputBase('preferred_date')} style={{ color: '#374151' }} />
                     {fieldErrors.preferred_date && <p className="text-xs mt-1 ml-1" style={{ color: '#e02424' }}>{fieldErrors.preferred_date}</p>}
                   </div>
 
+                  {/* Notes */}
                   <textarea placeholder="Pse dëshironi të adoptoni këtë kafshë? (opsionale)" value={form.notes}
-                    onChange={e => setForm({ ...form, notes: e.target.value })}
+                    onChange={e => setF('notes', e.target.value)}
                     rows={3} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-gray-900 bg-gray-50 focus:bg-white transition-all resize-none" />
 
                   <button onClick={handleSubmit} disabled={submitting}

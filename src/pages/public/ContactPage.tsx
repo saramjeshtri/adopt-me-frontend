@@ -29,16 +29,30 @@ function FadeUp({ children, className = '' }: { children: React.ReactNode; class
   )
 }
 
+const validatePhone = (v: string) => {
+  if (!v.trim()) return 'Numri i telefonit është i detyrueshëm.'
+  const cleaned = v.replace(/\s/g, '')
+  if (!/^(\+355|0)[6-9]\d{7,8}$/.test(cleaned))
+    return 'Numri nuk është valid (p.sh. +355 69 XXX XXXX ose 069 XXX XXXX)'
+  return ''
+}
+
+const validateEmail = (v: string) => {
+  if (!v.trim()) return ''
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Adresa email nuk është e vlefshme'
+  return ''
+}
+
 export default function ContactPage() {
   const [form, setForm] = useState({
     owner_name: '', phone: '', email: '',
     species: '', breed: '', age: '',
     is_vaccinated: '', reason: '', notes: '',
   })
-  const [photos, setPhotos] = useState<File[]>([])
+  const [photos, setPhotos]     = useState<File[]>([])
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError]       = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -57,9 +71,16 @@ export default function ContactPage() {
   const handleSubmit = async () => {
     const errors: Record<string, string> = {}
     if (!form.owner_name.trim()) errors.owner_name = 'Emri i plotë është i detyrueshëm.'
-    if (!form.phone.trim()) errors.phone = 'Numri i telefonit është i detyrueshëm.'
+
+    const phoneErr = validatePhone(form.phone)
+    if (phoneErr) errors.phone = phoneErr
+
+    const emailErr = validateEmail(form.email)
+    if (emailErr) errors.email = emailErr
+
     if (!form.species) errors.species = 'Ju lutem zgjidhni llojin e kafshës.'
-    if (!form.reason) errors.reason = 'Ju lutem zgjidhni arsyen e dorëzimit.'
+    if (!form.reason)  errors.reason  = 'Ju lutem zgjidhni arsyen e dorëzimit.'
+
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) return
     setError('')
@@ -77,8 +98,11 @@ export default function ContactPage() {
     }
   }
 
-  const inputCls = (field?: string) => `w-full border rounded-xl px-4 py-3 text-sm outline-none transition-all bg-gray-50 focus:bg-white ${field && fieldErrors[field] ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-gray-900'}`
-  const labelCls = 'block text-xs font-semibold mb-1.5 uppercase tracking-wide' 
+  const inputCls = (field?: string) =>
+    `w-full border rounded-xl px-4 py-3 text-sm outline-none transition-all bg-gray-50 focus:bg-white ${
+      field && fieldErrors[field] ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-gray-900'
+    }`
+  const labelCls = 'block text-xs font-semibold mb-1.5 uppercase tracking-wide'
 
   return (
     <div style={{ backgroundColor: '#faf9f7', minHeight: '100vh' }}>
@@ -86,7 +110,7 @@ export default function ContactPage() {
       {/* HERO */}
       <section className="relative overflow-hidden text-center" style={{ paddingTop: '7rem', paddingBottom: '5rem', background: 'linear-gradient(135deg, #1d4ed8 0%, #0e7490 100%)' }}>
         <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 60%, #f5f0eb 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 60%, #faf9f7 100%)' }} />
         <FadeUp className="relative z-10 px-6">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ backgroundColor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }}>
             <Phone size={28} style={{ color: 'white' }} />
@@ -102,8 +126,8 @@ export default function ContactPage() {
       <section className="max-w-5xl mx-auto px-6 py-14 grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { icon: MapPin, label: 'Adresa', lines: ['Sheshi "Skënderbej", Godina nr. 2', 'Tiranë, 1001, Shqipëri'], bg: '#fef2f2', color: '#e02424' },
-          { icon: Phone, label: 'Telefon', lines: ['0800 0888 (pa pagesë)', 'E Hënë – E Premte, 08:00–16:00'], bg: '#fefce8', color: '#ca8a04' },
-          { icon: Mail, label: 'Email', lines: ['info@tirana.al', 'Përgjigje brenda 24 orëve'], bg: '#f0fdf4', color: '#16a34a' },
+          { icon: Phone,  label: 'Telefon', lines: ['0800 0888 (pa pagesë)', 'E Hënë – E Premte, 08:00–16:00'], bg: '#fefce8', color: '#ca8a04' },
+          { icon: Mail,   label: 'Email', lines: ['info@tirana.al', 'Përgjigje brenda 24 orëve'], bg: '#f0fdf4', color: '#16a34a' },
         ].map(({ icon: Icon, label, lines, bg, color }) => (
           <FadeUp key={label}>
             <div className="bg-white rounded-2xl p-6 flex items-start gap-4 h-full hover:-translate-y-1 transition-all duration-300 hover:shadow-lg" style={{ border: '1px solid #f3f4f6' }}>
@@ -156,7 +180,7 @@ export default function ContactPage() {
             <FadeUp>
               <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid #f3f4f6', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
 
-                {/* Step 1 */}
+                {/* Step 1 — Owner info */}
                 <div className="p-6 md:p-8" style={{ borderBottom: '1px solid #f9fafb' }}>
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black text-white" style={{ backgroundColor: '#111827' }}>1</div>
@@ -164,28 +188,32 @@ export default function ContactPage() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="sm:col-span-2">
-                      <label className={labelCls} style={{ color: '#6b7280' }}>Emri i plotë</label>
+                      <label className={labelCls} style={{ color: '#6b7280' }}>Emri i plotë *</label>
                       <input placeholder="p.sh. Arta Kelmendi" value={form.owner_name}
                         onChange={e => { setF('owner_name', e.target.value); setFieldErrors(f => ({ ...f, owner_name: '' })) }}
                         className={inputCls('owner_name')} />
-                      {fieldErrors.owner_name && <p className="text-xs mt-1" style={{ color: '#e02424' }}>{fieldErrors.owner_name}</p>}
+                      {fieldErrors.owner_name && <p className="text-xs mt-1 font-medium" style={{ color: '#e02424' }}>{fieldErrors.owner_name}</p>}
                     </div>
                     <div>
-                      <label className={labelCls} style={{ color: '#6b7280' }}>Telefon</label>
-                      <input placeholder="06X XXX XXXX" value={form.phone}
+                      <label className={labelCls} style={{ color: '#6b7280' }}>Telefon *</label>
+                      <input placeholder="+355 6X XXX XXXX ose 06X XXX XXXX" value={form.phone}
                         onChange={e => { setF('phone', e.target.value); setFieldErrors(f => ({ ...f, phone: '' })) }}
+                        onBlur={e => { const err = validatePhone(e.target.value); if (err) setFieldErrors(f => ({ ...f, phone: err })) }}
                         className={inputCls('phone')} />
-                      {fieldErrors.phone && <p className="text-xs mt-1" style={{ color: '#e02424' }}>{fieldErrors.phone}</p>}
+                      {fieldErrors.phone && <p className="text-xs mt-1 font-medium" style={{ color: '#e02424' }}>{fieldErrors.phone}</p>}
                     </div>
                     <div>
                       <label className={labelCls} style={{ color: '#6b7280' }}>Email (opsionale)</label>
                       <input placeholder="email@shembull.al" value={form.email}
-                        onChange={e => setF('email', e.target.value)} className={inputCls()} />
+                        onChange={e => { setF('email', e.target.value); setFieldErrors(f => ({ ...f, email: '' })) }}
+                        onBlur={e => { const err = validateEmail(e.target.value); if (err) setFieldErrors(f => ({ ...f, email: err })) }}
+                        className={inputCls('email')} />
+                      {fieldErrors.email && <p className="text-xs mt-1 font-medium" style={{ color: '#e02424' }}>{fieldErrors.email}</p>}
                     </div>
                   </div>
                 </div>
 
-                {/* Step 2 */}
+                {/* Step 2 — Animal info */}
                 <div className="p-6 md:p-8" style={{ borderBottom: '1px solid #f9fafb' }}>
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black text-white" style={{ backgroundColor: '#111827' }}>2</div>
@@ -193,7 +221,7 @@ export default function ContactPage() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className={labelCls} style={{ color: '#6b7280' }}>Lloji</label>
+                      <label className={labelCls} style={{ color: '#6b7280' }}>Lloji *</label>
                       <div className="relative">
                         <select value={form.species} onChange={e => { setF('species', e.target.value); setFieldErrors(f => ({ ...f, species: '' })) }}
                           className={`${inputCls('species')} appearance-none pr-10 cursor-pointer`}>
@@ -202,7 +230,7 @@ export default function ContactPage() {
                         </select>
                         <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#9ca3af' }} />
                       </div>
-                      {fieldErrors.species && <p className="text-xs mt-1" style={{ color: '#e02424' }}>{fieldErrors.species}</p>}
+                      {fieldErrors.species && <p className="text-xs mt-1 font-medium" style={{ color: '#e02424' }}>{fieldErrors.species}</p>}
                     </div>
                     <div>
                       <label className={labelCls} style={{ color: '#6b7280' }}>Raca (opsionale)</label>
@@ -255,7 +283,7 @@ export default function ContactPage() {
                   </div>
                 </div>
 
-                {/* Step 3 */}
+                {/* Step 3 — Reason */}
                 <div className="p-6 md:p-8">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black text-white" style={{ backgroundColor: '#111827' }}>3</div>
@@ -263,7 +291,7 @@ export default function ContactPage() {
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <label className={labelCls} style={{ color: '#6b7280' }}>Arsyeja kryesore</label>
+                      <label className={labelCls} style={{ color: '#6b7280' }}>Arsyeja kryesore *</label>
                       <div className="relative">
                         <select value={form.reason} onChange={e => { setF('reason', e.target.value); setFieldErrors(f => ({ ...f, reason: '' })) }}
                           className={`${inputCls('reason')} appearance-none pr-10 cursor-pointer`}>
@@ -272,7 +300,7 @@ export default function ContactPage() {
                         </select>
                         <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#9ca3af' }} />
                       </div>
-                      {fieldErrors.reason && <p className="text-xs mt-1" style={{ color: '#e02424' }}>{fieldErrors.reason}</p>}
+                      {fieldErrors.reason && <p className="text-xs mt-1 font-medium" style={{ color: '#e02424' }}>{fieldErrors.reason}</p>}
                     </div>
                     <div>
                       <label className={labelCls} style={{ color: '#6b7280' }}>Shënime shtesë (opsionale)</label>
@@ -280,11 +308,13 @@ export default function ContactPage() {
                         onChange={e => setF('notes', e.target.value)}
                         rows={3} className={`${inputCls()} resize-none`} />
                     </div>
+
                     {error && (
                       <div className="flex items-center gap-2 text-sm rounded-xl px-4 py-3" style={{ backgroundColor: '#fef2f2', color: '#e02424', border: '1px solid #fecaca' }}>
                         <AlertCircle size={14} /> {error}
                       </div>
                     )}
+
                     <button onClick={handleSubmit} disabled={submitting}
                       className="w-full text-white py-4 rounded-xl font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50"
                       style={{ backgroundColor: '#e02424' }}>
@@ -298,6 +328,7 @@ export default function ContactPage() {
                     </p>
                   </div>
                 </div>
+
               </div>
             </FadeUp>
           )}
@@ -334,8 +365,8 @@ export default function ContactPage() {
               <div className="space-y-3">
                 {[
                   { day: 'E Hënë – E Premte', time: '08:00 – 16:00', open: true },
-                  { day: 'E Shtunë', time: 'Mbyllur', open: false },
-                  { day: 'E Diel', time: 'Mbyllur', open: false },
+                  { day: 'E Shtunë',           time: 'Mbyllur',       open: false },
+                  { day: 'E Diel',             time: 'Mbyllur',       open: false },
                 ].map(({ day, time, open }) => (
                   <div key={day} className="flex items-center justify-between py-2.5" style={{ borderBottom: '1px solid #f9fafb' }}>
                     <span className="text-sm" style={{ color: '#374151' }}>{day}</span>
